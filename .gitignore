@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+venv-3.10/
+.env
+
+# Logs
+*.log
+
+# Docker
+*.dockerignore
+docker-compose.override.yml
+Dockerfile
+
+# Misc
+*.egg-info/
+*.egg
+*.dist-info/
+*.whl
+*.db
+*.sqlite3
+
+# HTML
+*.html
