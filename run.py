@@ -6,6 +6,7 @@
 #   python run.py git-commit "Commit message" --tag v1.0.0
 #   python run.py run-dev
 #   python run.py run-prod
+#   python run.py run-prod-gunicorn
 #
 # Commands:
 #   generate-changelog   Generate changelog file from git commit history.
@@ -29,15 +30,41 @@
 #       Example:
 #           python run.py run-prod
 #
+#   run-prod-gunicorn   Jalankan FastAPI dengan gunicorn (jumlah worker = CPU core)
+#       Example:
+#           python run.py run-prod-gunicorn
+#
 
+import time
 import typer
 import subprocess
 from pathlib import Path
 import os
 import multiprocessing
-import uvicorn
+# import uvicorn
 
 app = typer.Typer()
+
+def activate_venv(venv_path: str = "venv-3.10"):
+    """Aktifkan virtualenv sebelum menjalankan server"""
+    venv_dir = Path(venv_path)
+    if not venv_dir.exists():
+        typer.echo(f"❌ Virtualenv {venv_path} tidak ditemukan.")
+        raise typer.Exit(1)
+
+    activate_script = (
+        venv_dir / "Scripts" / "activate"
+        if os.name == "nt"
+        else venv_dir / "bin" / "activate"
+    )
+
+    if not activate_script.exists():
+        typer.echo(f"❌ Script {activate_script} tidak ditemukan.")
+        raise typer.Exit(1)
+
+    typer.echo(f"✅ Script {activate_script} ditemukan.")
+    os.system(f".\\{activate_script}")
+    typer.echo(f"✅ Virtualenv {venv_path} telah diaktifkan.")
 
 @app.command(help="Run FastAPI app in development mode (uvicorn reload)")
 def run_dev(host: str = typer.Option("127.0.0.1", help="Host to run the app on"),
@@ -46,8 +73,18 @@ def run_dev(host: str = typer.Option("127.0.0.1", help="Host to run the app on")
     """
     Jalankan FastAPI dengan uvicorn di mode development (auto-reload).
     """
-    uvicorn.run("app.main:app", host=host, port=port, reload=reload)
-    # os.system("uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload")
+    # uvicorn.run("app.main:app", host=host, port=port, reload=reload)
+    # os.system(f"uvicorn app.main:app --host {host} --port {port} --reload {reload}")
+    cmd = [
+        "uvicorn",
+        "app.main:app",
+        "--host", host,
+        "--port", str(port),
+        "--reload" if reload else None,
+    ]
+    typer.echo(f"Menjalankan: {' '.join(cmd)}")
+    activate_venv()
+    subprocess.run(cmd)
 
 @app.command(help="Run FastAPI app in production mode (uvicorn with workers=CPU core count)")
 def run_prod(host: str = typer.Option("127.0.0.1", help="Host to run the app on"),
@@ -56,8 +93,40 @@ def run_prod(host: str = typer.Option("127.0.0.1", help="Host to run the app on"
     """
     Jalankan FastAPI dengan uvicorn dan jumlah worker sesuai jumlah CPU core.
     """
-    uvicorn.run("app.main:app", host=host, port=port, workers=workers)
-    # os.system(f"uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers {workers}")
+    # uvicorn.run("app.main:app", host=host, port=port, workers=workers)
+    # os.system(f"uvicorn app.main:app --host {host} --port {port} --workers {workers}")
+    cmd = [
+        "uvicorn",
+        "app.main:app",
+        "--host", host,
+        "--port", str(port),
+        "--workers", str(workers),
+    ]
+    typer.echo(f"Menjalankan: {' '.join(cmd)}")
+    activate_venv()
+    subprocess.run(cmd)
+
+@app.command(help="Run FastAPI app in production mode (gunicorn with workers=CPU core count)")
+def run_prod_gunicorn(host: str = typer.Option("127.0.0.1", help="Host to run the app on"),
+            port: int = typer.Option(8000, help="Port to run the app on"),
+            workers: int = typer.Option(multiprocessing.cpu_count(), help="Number of workers to run")):
+    """
+    Jalankan FastAPI dengan gunicorn dan jumlah worker sesuai jumlah CPU core.
+    """
+    if os.name == "nt":
+        typer.echo(f"❌ gunicorn not supported on Windows, please use ./run.py run-prod instead.")
+        raise typer.Exit(1)
+    # os.system(f"gunicorn app.main:app -k uvicorn.workers.UvicornWorker --bind {host}:{port} --workers {workers}")
+    cmd = [
+        "gunicorn",
+        "app.main:app",
+        "-k", "uvicorn.workers.UvicornWorker",
+        "--bind", f"{host}:{port}",
+        "--workers", str(workers),
+    ]
+    typer.echo(f"Menjalankan: {' '.join(cmd)}")
+    activate_venv()
+    subprocess.run(cmd)
 
 @app.command()
 def generate_changelog(output: str = typer.Option("CHANGELOG.md", help="Output changelog file name")):
@@ -66,6 +135,7 @@ def generate_changelog(output: str = typer.Option("CHANGELOG.md", help="Output c
     By default, output is CHANGELOG.md.
     """
     try:
+        activate_venv()
         subprocess.check_call([
             "git-cliff",
             "-c", "git-cliff.toml",
@@ -89,4 +159,13 @@ def git_commit(message: str = typer.Argument(..., help="Commit message"), tag: s
 		typer.echo(f"Error during git commit/tag: {e}", err=True)
 
 if __name__ == "__main__":
-	app()
+    try:
+        app()
+    except Exception as e:
+        typer.echo(f"❌ Error: {e}", err=True)
+    finally:
+        wait = 3
+        typer.echo(f"Exiting in {wait}s...")
+        time.sleep(wait)
+        # if os.name == "nt":
+        #     input("👉 Tekan Enter untuk keluar...")

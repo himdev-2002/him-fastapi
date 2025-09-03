@@ -1,5 +1,5 @@
+from app.utils.logger import log_api
 from .ip_filter import IPFilterMiddleware
-
 # Security headers middleware
 # Security headers middleware
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -14,6 +14,11 @@ from .sql_injection import SQLInjectionMiddleware
 from .xss import XSSMiddleware
 
 def setup_middlewares(app):
+	log_api(
+		msg="Starting Configure Middlewares...",
+		act="init_app",
+		level="INFO"
+	)
 	# IP/domain whitelist/blacklist
 	app.add_middleware(IPFilterMiddleware)
 	# CORS
@@ -28,8 +33,13 @@ def setup_middlewares(app):
 	app.add_middleware(JWTAuthMiddleware)
 	# SQL Injection protection
 	app.add_middleware(SQLInjectionMiddleware)
-	# # XSS protection
-	# app.add_middleware(XSSMiddleware)
+	# XSS protection
+	app.add_middleware(XSSMiddleware)
+	log_api(
+		msg="Configure Middlewares Done.",
+		act="init_app",
+		level="INFO"
+	)
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 	async def dispatch(self, request: Request, call_next):

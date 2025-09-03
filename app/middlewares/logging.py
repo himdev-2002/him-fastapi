@@ -25,7 +25,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 		request_id = request.state.request_id
 		start_time = time.time()
 		user = getattr(request.state, "user", None)
-		user_info = user.get("sub") if isinstance(user, dict) and "sub" in user else "anonymous"
+		user_info = user.get("sub") if isinstance(user, dict) and "sub" in user else "-"
 		response = await call_next(request)
 		process_time = (time.time() - start_time) * 1000
 		route = request.url.path
