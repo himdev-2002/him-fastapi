@@ -28,17 +28,20 @@ from pathlib import Path
 app = typer.Typer()
 
 @app.command()
-def generate_changelog(output: str = "CHANGELOG.md"):
-	"""Generate changelog file from git commit history."""
-	try:
-		log = subprocess.check_output([
-			"git", "log", "--pretty=format:%h %ad %s", "--date=short"
-		], encoding="utf-8")
-		changelog_path = Path(output)
-		changelog_path.write_text(f"# Changelog\n\n{log}\n")
-		typer.echo(f"Changelog generated at {output}")
-	except Exception as e:
-		typer.echo(f"Error generating changelog: {e}", err=True)
+def generate_changelog(output: str = typer.Option("CHANGELOG.md", help="Output changelog file name")):
+    """
+    Generate a changelog file using git-cliff and git-cliff.toml config.
+    By default, output is CHANGELOG.md.
+    """
+    try:
+        subprocess.check_call([
+            "git-cliff",
+            "-c", "git-cliff.toml",
+            "-o", output
+        ])
+        typer.echo(f"Changelog generated at {output} using git-cliff.")
+    except Exception as e:
+        typer.echo(f"Error generating changelog with git-cliff: {e}", err=True)
 
 @app.command()
 def git_commit(message: str = typer.Argument(..., help="Commit message"), tag: str = typer.Option(None, help="Tag to add after commit")):
