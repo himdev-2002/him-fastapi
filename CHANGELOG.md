@@ -7,14 +7,15 @@ All notable changes to this project will be documented in this file. See [conven
 
 ### Features
 
-- **(changelog)** add command to generate change log using git cliff - ([9f748ce](https://repo-url/commit/9f748ceae31692658a2d9d0cd0487743962c7954)) - VIVOBOOK-HIM\HIM
+- **(changelog)** add command to generate change log using git cliff - ([ed17317](https://repo-url/commit/ed17317e9809a6c7252f4683c606022579026589)) - VIVOBOOK-HIM\HIM
+- **(command)** add command to run project in dev and prod mode - ([26fa420](https://repo-url/commit/26fa4206174c18d889cd8e1cea68547e426e8848)) - himdev-2002
 
 
 ### Commit Statistics
 
-- 1 commit(s) contributed to the release.
+- 2 commit(s) contributed to the release.
 - 0 day(s) passed between the first and last commit.
-- 1 commit(s) parsed as conventional.
+- 2 commit(s) parsed as conventional.
 - 0 linked issue(s) detected in commits.
 
 ---

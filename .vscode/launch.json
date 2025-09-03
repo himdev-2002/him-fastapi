@@ -17,6 +17,38 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
+            "name": "Run FastAPI (Uvicorn) MultiWorker Linux",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.main:app",
+                "--host", "127.0.0.1",
+                "--port", "8000",
+                "--workers", "$(nproc)",
+                "--reload"
+            ],
+            "jinja": true,
+            "justMyCode": true,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Run FastAPI (Uvicorn) MultiWorker Windows",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "app.main:app",
+                "--host", "127.0.0.1",
+                "--port", "8000",
+                "--workers", "$env:NUMBER_OF_PROCESSORS",
+                "--reload"
+            ],
+            "jinja": true,
+            "justMyCode": true,
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
             "name": "Build FastAPI Docker Image",
             "type": "docker",
             "request": "launch",

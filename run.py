@@ -4,6 +4,8 @@
 # Usage:
 #   python run.py generate-changelog --output CHANGELOG.md
 #   python run.py git-commit "Commit message" --tag v1.0.0
+#   python run.py run-dev
+#   python run.py run-prod
 #
 # Commands:
 #   generate-changelog   Generate changelog file from git commit history.
@@ -19,13 +21,43 @@
 #           python run.py git-commit "Initial commit"
 #           python run.py git-commit "Release v1.0.0" --tag v1.0.0
 #
-# Note: Ensure you have git installed and configured.
+#   run-dev             Jalankan FastAPI dengan uvicorn (dev mode, reload)
+#       Example:
+#           python run.py run-dev
+#
+#   run-prod            Jalankan FastAPI dengan uvicorn (jumlah worker = CPU core)
+#       Example:
+#           python run.py run-prod
+#
 
 import typer
 import subprocess
 from pathlib import Path
+import os
+import multiprocessing
+import uvicorn
 
 app = typer.Typer()
+
+@app.command(help="Run FastAPI app in development mode (uvicorn reload)")
+def run_dev(host: str = typer.Option("127.0.0.1", help="Host to run the app on"),
+            port: int = typer.Option(8000, help="Port to run the app on"),
+            reload: bool = typer.Option(True, help="Enable auto-reload")):
+    """
+    Jalankan FastAPI dengan uvicorn di mode development (auto-reload).
+    """
+    uvicorn.run("app.main:app", host=host, port=port, reload=reload)
+    # os.system("uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload")
+
+@app.command(help="Run FastAPI app in production mode (uvicorn with workers=CPU core count)")
+def run_prod(host: str = typer.Option("127.0.0.1", help="Host to run the app on"),
+            port: int = typer.Option(8000, help="Port to run the app on"),
+            workers: int = typer.Option(multiprocessing.cpu_count(), help="Number of workers to run")):
+    """
+    Jalankan FastAPI dengan uvicorn dan jumlah worker sesuai jumlah CPU core.
+    """
+    uvicorn.run("app.main:app", host=host, port=port, workers=workers)
+    # os.system(f"uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers {workers}")
 
 @app.command()
 def generate_changelog(output: str = typer.Option("CHANGELOG.md", help="Output changelog file name")):
