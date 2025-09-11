@@ -2,7 +2,7 @@
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 class UserBase(BaseModel):
-	name: str
+	username: str
 	email: EmailStr
 
 class UserCreate(UserBase):
@@ -13,5 +13,11 @@ class UserUpdate(UserBase):
 
 class UserResponse(UserBase):
 	id: int
+
+	model_config = ConfigDict(from_attributes=True)
+
+class FullUserResponse(UserBase):
+	id: int
+	password: str
 
 	model_config = ConfigDict(from_attributes=True)

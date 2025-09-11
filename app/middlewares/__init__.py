@@ -19,12 +19,12 @@ def setup_middlewares(app):
 		act="init_app",
 		level="INFO"
 	)
+	# Logging
+	app.add_middleware(LoggingMiddleware)
 	# IP/domain whitelist/blacklist
 	app.add_middleware(IPFilterMiddleware)
 	# CORS
 	add_cors_middleware(app)
-	# Logging
-	app.add_middleware(LoggingMiddleware)
 	# Security headers
 	app.add_middleware(SecurityHeadersMiddleware)
 	# Rate limit (dummy, bisa diganti slowapi)

@@ -1,0 +1,155 @@
+---
+
+description: Enhanced FastAPI Best Practices & Clean Code Rule Set
+
+globs: ["**/*.py"]
+alwaysApply: true
+
+---
+
+## 1. Advanced Project Structure
+
+- Split code into logical domains (e.g., users, items) with their own routers, schemas, models, services, and repositories.
+- Use an application factory or create_app pattern for better testing and configuration.
+- Keep configuration logic (settings, environment) in a dedicated module using Pydantic.
+- Store reusable dependencies in a dedicated `dependencies/` folder.
+
+---
+
+## 2. Dependency Injection Enrichment
+
+- Chain dependencies using FastAPI’s dependency_overrides, especially for testability and mocking.
+- Use sub-dependencies for context-aware validation (e.g., permissions based on current user role).
+- Pass configuration/settings as dependencies, not global objects.
+
+---
+
+## 3. Pydantic Schemas & Validation Improvements
+
+- Add Field constraints and descriptions for OpenAPI generation.
+- Explicitly document example values in Pydantic models with `example` in `Field`.
+- Use default `None` for optional fields and annotate accordingly.
+- Use `validate_assignment` for data mutation in Pydantic models if needed.
+
+```python
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = Field(None, example="user@example.com")
+    full_name: Optional[str] = Field(None, min_length=3, max_length=100)
+```
+
+---
+
+## 4. Endpoint Design Extensions
+
+- Utilize path parameter constraints (e.g., min/max) for validation.
+- Take advantage of FastAPI’s Query, Path, Header, Cookie, and Body parameter classes for explicit parameter declarations.
+- Use tags, summary, description, and operation_id for every endpoint to generate clear, maintainable API documentation.
+- Return standardized error response models (e.g., ErrorResponse schema).
+- Always use response_model_exclude_unset=True to prevent leaking unset database fields.
+- Naming endpoints clearly: `/api/v1/resource` instead of `/resource`.
+
+```python
+@router.get(
+    "/users/{user_id}",
+    response_model=UserRead,
+    tags=["Users"],
+    summary="Retrieve user by ID",
+    response_description="User profile response",
+)
+async def get_user(
+    user_id: int = Path(..., gt=0, example=1),
+    db: Session = Depends(get_db),
+):
+    ...
+```
+
+---
+
+## 5. Asynchronicity and Background Jobs
+
+- Use FastAPI background tasks for scheduled or deferred operations (emails, logs) instead of in-request logic.
+- Do not block async endpoints with synchronous IO—delegate such tasks using threadpool if needed.
+
+```python
+from fastapi import BackgroundTasks
+@router.post("/send-email")
+async def send_email(email: EmailSchema, background_tasks: BackgroundTasks):
+    background_tasks.add_task(send_email_async, email)
+```
+
+---
+
+## 6. Database Layer Best Practices
+
+- Use Alembic for migrations and maintain database version control.
+- Follow repository/service pattern to encapsulate business logic, keeping routers thin.
+- Apply transaction management using context managers.
+
+---
+
+## 7. Security & Rate Limiting
+
+- Document security schemes in OpenAPI (OAuth2, API Keys).
+- Add rate-limiting middleware for DDoS protection.
+- Use CSRF protection and CORS carefully—set allowed origins in production.
+- Encrypt sensitive info at rest and in transit.
+
+---
+
+## 8. API Versioning & Lifecycle
+
+- Ensure all endpoints are versioned (e.g., `/api/v1/`).
+- Mark deprecated endpoints and provide migration paths.
+- Use FastAPI’s lifespan events for startup and shutdown resources.
+
+---
+
+## 9. Error Handling & Response Standardization
+
+- Implement global exception handlers for HTTPException and RequestValidationError.
+- Always return structured error responses with HTTP status codes and error details.
+- Log all errors and use log correlation IDs (request id) for debugging.
+
+---
+
+## 10. API Documentation & Metadata
+
+- Use tags for logical grouping.
+- Provide operation-specific summaries, detailed descriptions, examples, and parameter docs.
+- Annotate all query/path/body parameters for OpenAPI reflection.
+- Use OpenAPI extensions for custom API metadata if needed.
+
+---
+
+## 11. Testing & Mocking
+
+- Use TestClient for HTTP integration tests and pytest for unit testing.
+- Mock external services and override dependencies to ensure isolated tests.
+- Assert on both HTTP status and response structure.
+
+---
+
+## 12. Monitoring, Logging, and Observability
+
+- Add structured logging (e.g., JSON logs for cloud-stack compatibility).
+- Integrate with APM tools (e.g., Prometheus, Grafana, Sentry).
+- Track request duration, error rates, and use unique request IDs for traceability.
+
+---
+
+## 13. Performance & Scalability
+
+- Configure Uvicorn/Gunicorn for async workers and proper timeouts.
+- Use connection pooling for databases and external services.
+- Use FastAPI’s response_class for large data (e.g., StreamingResponse).
+- Apply pagination, filtering, and sorting in endpoints that return collections.
+
+---
+
+## 14. Continuous Integration & Deployment
+
+- Use pre-commit hooks to enforce formatting, typing, and linting.
+- Automate testing and linting in CI pipelines.
+- Run security audits on dependencies (e.g., pip-audit).
+
+---

@@ -1,0 +1,237 @@
+---
+
+description: Python Code Rules
+globs: ["**/*.py"]
+alwaysApply: true
+
+---
+
+## 1. General Syntax & Formatting
+
+### Use Modern Syntax
+- Use Python 3.8+ features (f-strings, assignment expressions, type hints, walrus operator).
+- Prefer f-strings for string interpolation: `f"Hello, {name}!"`.
+- Always use 4 spaces per indentation level (never tabs).
+- Limit lines to a maximum of 79 characters for basic code, and 72 for docstrings/comments.
+- Wrap complicated expressions over multiple lines using parentheses.
+- Use two blank lines before top-level function and class definitions.
+- Group related code into functions or classes.
+- Write code that is readable and self-explanatory whenever possible.
+
+```python
+# ✅ Good
+user_age = 25
+greeting = f"Hello, {user_name}!"
+data = [x for x in values if x > 0]
+
+# ❌ Bad
+user_age=25
+greeting = "Hello, " + user_name + "!"
+data = []
+for x in values:
+    if x > 0:
+        data.append(x)
+```
+
+---
+
+## 2. Naming Conventions
+
+### Variables and Functions
+- Use snake_case for variables, functions, and methods.
+- Names must be descriptive and convey purpose.
+- Avoid unnecessary abbreviations; only allow if industry-standard.
+- Use verbs for functions and methods, nouns for variable and constant names.
+
+```python
+# ✅ Good
+user_account_balance = 1000
+def calculate_total_price(items: list[float]) -> float: ...
+is_user_authenticated = True
+
+# ❌ Bad
+bal = 1000
+def calc(items): ...
+auth = True
+```
+
+### Constants
+- Use ALL_CAPS_WITH_UNDERSCORES for constants.
+
+```python
+# ✅ Good
+MAX_RETRY_ATTEMPTS = 3
+API_BASE_URL = "https://api.example.com"
+```
+
+### Classes and Type Aliases
+- Use PascalCase for class and type names.
+
+```python
+class UserService: pass
+
+UserDict = dict[str, str]
+```
+
+---
+
+## 3. Function & Method Design
+
+- Keep functions small and focused; aim for single responsibility.
+- Limit function length to 20–30 lines (split as needed).
+- Use type hints for all parameters and return types.
+- Use docstrings for all public functions, classes, and modules.
+- Use specific exceptions in `try/except`; avoid blanket `except:`.
+- Use meaningful return values or None; explicitly document both.
+- Prefer list comprehensions and generator expressions for simple operations.
+- Use keyword-only arguments for clarity when a function has more than 3 parameters.
+- Provide default values for optional keyword arguments.
+- Avoid using mutable default arguments.
+
+```python
+def fetch_user_by_id(user_id: str) -> dict[str, Any] | None:
+    """
+    Fetch a user from the database by ID.
+    Returns None if not found.
+    """
+    try:
+        return db.get_user(user_id)
+    except DatabaseError as err:
+        logger.error(f"Could not fetch user {user_id}: {err}")
+        return None
+
+def add_item(item: Item, collection: list[Item] | None = None) -> list[Item]:
+    if collection is None:
+        collection = []
+    collection.append(item)
+    return collection
+```
+
+---
+
+## 4. Collections & Iteration
+
+- Use comprehensions for list/set/dict transformations when concise.
+- Use generators for large datasets to manage memory efficiently.
+- Favor built-in functions (`map`, `filter`, `any`, `all`, `enumerate`, `zip`) when they enhance clarity.
+- Prefer sets for membership tests.
+
+```python
+names = ["alice", "bob", "carol"]
+upper_names = [name.upper() for name in names]
+ids_set = {user.id for user in users if user.active}
+```
+
+---
+
+## 5. Imports
+
+- Organize imports: standard library → third-party → project-local modules.
+- Separate groups with a blank line.
+- Import exactly what is needed (no `import *`).
+- Use absolute imports or explicit relative imports as appropriate—never ambiguous ones.
+- Keep all imports at the top, except for those explicitly needed inside local scopes to avoid circular dependencies.
+
+```python
+import os
+from typing import Any, Optional
+
+import requests
+
+from myapp.utils import parse_date
+```
+
+---
+
+## 6. Documentation & Comments
+
+- All public modules, classes, methods, and functions must have docstrings.
+- Use Google or reStructuredText style docstrings for documentation consistency.
+- Use inline comments only for complex code, and keep them brief and relevant.
+- Don’t state the obvious (“# increment x” above `x += 1` is not helpful).
+
+```python
+def sum_numbers(numbers: list[float]) -> float:
+    """Compute the sum of all numbers."""
+    return sum(numbers)
+```
+
+---
+
+## 7. Error Handling & Safety
+
+- Catch only expected exceptions, and handle them gracefully.
+- Log or re-raise exceptions as needed; do not silently ignore errors.
+- Validate all external input, including environment variables, file reads, and CLI arguments.
+- Avoid using `eval` and unsafe dynamic code execution.
+- Never hardcode secrets, credentials, or keys in the codebase.
+
+---
+
+## 8. Pythonic Principles
+
+- Favor idiomatic ("Pythonic") code, such as unpacking and context managers (`with` statement).
+- Prefer "explicit is better than implicit", "simple is better than complex", and other Zen of Python wisdom (`import this`).
+- Avoid repeated code (DRY: Don’t Repeat Yourself).
+- Use contextlib and built-in tools for resource cleanup.
+
+```python
+with open("file.txt") as f:
+    data = f.read()
+```
+
+---
+
+## 9. Testing & Demonstrations
+
+- Place test code in `tests/` or protect in main guards.
+- Use `unittest`, `pytest`, or `doctest` for unit and integration tests.
+- Write tests for edge cases and failure scenarios.
+- Cover important input domains with tests.
+
+---
+
+## 10. Main Program Entry
+
+- Always protect main execution logic with `if __name__ == "__main__":`.
+- Avoid executing logic on import.
+
+```python
+def main() -> None:
+    ...
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## 11. Performance Considerations
+
+- Use the most efficient data structures available (lists, sets, dicts, tuples).
+- Optimize only when bottlenecks are measurable; prefer readability over minor performance gains.
+
+---
+
+## 12. Environment & Compatibility
+
+- Write code that is portable unless specific OS features are required.
+- Avoid using platform-specific paths without `os.path` or `pathlib`.
+- Do not use system calls with unsanitized user input.
+
+---
+
+## 13. Dependency Management
+
+- List all dependencies in requirements files (requirements.txt or pyproject.toml).
+- Prefer standard library modules when possible.
+- Pin dependency versions in production projects.
+
+---
+
+## 14. Version & Linter Configuration
+
+- Assume Python 3.8+ unless otherwise noted.
+- Use tools like `black`, `flake8`, `mypy`, and `isort` for formatting, linting, type checking, and import ordering.
+
+---

@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String
 from app.core.database import Base
 
 class Item(Base):
-	__tablename__ = "items"
+	__tablename__ = "m_items"
 	id = Column(Integer, primary_key=True, index=True)
 	title = Column(String, nullable=False)
 	description = Column(String, nullable=True)

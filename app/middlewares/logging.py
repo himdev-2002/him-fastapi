@@ -18,23 +18,20 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 			if 'LoggingMiddleware' in endpoint.excluded_middlewares:
 				return await call_next(request)
 
-		# Generate request_id only once per request and store in request.state
-		if not hasattr(request.state, "request_id"):
-			rand_digits = str(random.randint(1000, 9999))
-			request.state.request_id = f"{uuid.uuid4()}-{rand_digits}"
-		request_id = request.state.request_id
 		start_time = time.time()
-		user = getattr(request.state, "user", None)
-		user_info = user.get("sub") if isinstance(user, dict) and "sub" in user else "-"
 		response = await call_next(request)
 		process_time = (time.time() - start_time) * 1000
 		route = request.url.path
+		user = getattr(request.state, "user", None)
+		act = getattr(request.state, "act", None)
+		tx_id = getattr(request.state, "tx_id", None)
 		msg = f"{request.method} {route} completed_in={process_time:.2f}ms status_code={response.status_code}"
 		log_api(
 			msg=msg,
-			request_id=request_id,
-			user=user_info,
+			user=user,
 			route=route,
+			act=act,
+			tx_id=tx_id,
 			level="INFO"
 		)
 		return response

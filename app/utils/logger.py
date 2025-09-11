@@ -1,11 +1,10 @@
-
-
 import logging as loging
-from logging.handlers import TimedRotatingFileHandler
+import os
 import colorlog
+from logging.handlers import TimedRotatingFileHandler
 # from datetime import datetime
 from app.core.config import settings
-import os
+from app.middlewares.context import get_request_id
 
 # Buat folder logs kalau belum ada
 os.makedirs("logs", exist_ok=True)
@@ -28,7 +27,8 @@ class ActFilter(loging.Filter):
     def __init__(self, act):
         self.act = act
     def filter(self, record):
-        return getattr(record, "act", None) == self.act
+        # print(getattr(record, "act", None), self.act, record.levelno)
+        return getattr(record, "act", None) == self.act and record.levelno != loging.DEBUG
 
 # Formatter untuk console (berwarna)
 console_formatter = colorlog.ColoredFormatter(
@@ -68,6 +68,8 @@ def create_act_handler(filename, act, when="midnight", interval=1, backup_count=
 
 act_config = {
     "logs/init_app.log": "init_app",
+    "logs/auth.log": "auth",
+    "logs/user.log": "user",
     "logs/debug.log": "debug",
     "logs/info.log": "info",
     "logs/warning.log": "warning",
@@ -103,7 +105,6 @@ for file, act in act_config.items():
 
 def log_api(
     msg: str,
-    request_id: str = None,
     user: str = None,
     route: str = None,
     level: str = "INFO",
@@ -113,7 +114,7 @@ def log_api(
     # log_time = datetime.utcnow().isoformat()
     user_info = user or "-"
     route_info = route or "-"
-    req_id = request_id or "-"
+    req_id = get_request_id() or "-"
     tx_info = tx_id or "-"
     process_id = os.getpid()
     log_msg = (

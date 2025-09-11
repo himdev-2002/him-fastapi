@@ -1,0 +1,140 @@
+---
+
+description: FastAPI-Specific Documentation, Commenting, and Logging Rules
+
+globs: ["**/*.py"]  
+alwaysApply: true
+
+---
+
+## 1. **Route Documentation for OpenAPI**
+
+- Always use FastAPI’s docstring and decorator keywords (`summary`, `description`, `response_description`, etc.) to enrich OpenAPI docs.
+- Apply `tags` to group endpoints logically for API consumers.
+- Use Pydantic’s `Field(..., description="...")` and example fields for all schema attributes for rich model documentation.
+- For path/query/body params, always use FastAPI’s `Query`, `Path`, `Body` with descriptions and validation details.
+
+```python
+from fastapi import APIRouter, Query, Path
+from pydantic import BaseModel, Field
+
+class User(BaseModel):
+    id: int = Field(..., description="Unique user ID")
+    name: str = Field(..., description="Full name", example="John Doe")
+
+router = APIRouter()
+
+@router.get(
+    "/users/{user_id}",
+    summary="Retrieve a single user by ID",
+    description="Fetch user details from the database using a unique identifier.",
+    tags=["User Operations"],
+    response_description="User details on success"
+)
+async def get_user(
+    user_id: int = Path(..., description="The user’s unique identifier"),
+    verbose: bool = Query(False, description="Set true for verbose output"),
+):
+    """Retrieve user information based on user_id."""
+    ...
+```
+
+---
+
+## 2. **Dependency Documentation**
+
+- Document all custom dependencies with clear docstrings, explaining the context they provide and when to use them.
+- In route dependencies, use the `Depends` construct, and in endpoint docstrings or OpenAPI decorators, mention:  
+  - what dependencies inject,  
+  - e.g., "`get_current_user` injects authenticated user context (see dependencies.py)`".
+
+---
+
+## 3. **Response Model Clarity**
+
+- Always specify `response_model`, and use `response_model_include`/`response_model_exclude` when appropriate for data privacy/clarity.
+- Annotate any custom response or error model with rich descriptions for every field, improving the auto-generated API docs.
+
+---
+
+## 4. **Error Handling & Exception Logging**
+
+- Utilize FastAPI’s custom exception handlers for standard and app-wide errors.
+- When defining handlers, always log the request path, status code, and full exception details.  
+- For HTTPException and validation errors, return a structured error model, add OpenAPI docs (`responses` in decorator).
+
+```python
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
+from fastapi import status
+
+@app.exception_handler(ValidationError)
+async def validation_exception_handler(request: Request, exc: ValidationError):
+    logger.warning(
+        "Validation error at %s: %s", request.url.path, exc.errors()
+    )
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
+    )
+```
+
+---
+
+## 5. **Logging HTTP and Lifecycle Events**
+
+- Log FastAPI app startup and shutdown events, including resource initialization and cleanup, using FastAPI’s event handlers.
+
+```python
+@app.on_event("startup")
+async def on_startup():
+    logger.info("FastAPI app startup: Initializing resources...")
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    logger.info("FastAPI app shutdown: Cleaning up resources...")
+```
+
+- For each request, consider logging request/response cycle (use custom middleware if needed), including:
+  - HTTP method, path, user (if available), status code, and latency for performance tracking.
+
+---
+
+## 6. **Background Task & Middleware Documentation**
+
+- Document all background tasks (triggered by `BackgroundTasks`) with detailed docstrings about what, when, and why the task runs.
+- Annotate custom middleware classes with comments describing their lifecycle hooks and clearly state potential side effects on requests or responses.
+
+---
+
+## 7. **Complex Dependency Trees and Security Schemes**
+
+- Explicitly document any dependency that conditionally injects resources (for example, optional authentication) in endpoint docstrings or OpenAPI docs.
+- Use the `security` OpenAPI decorator parameters to annotate endpoints requiring authentication, so the security flow is clear in auto-generated docs.
+
+---
+
+## Summary Example Highlight
+
+```python
+@router.post(
+    "/token",
+    summary="Generate an access token",
+    description="Authenticate user credentials and issue JWT access token. See OAuth2PasswordBearer dependency.",
+    tags=["Authentication"],
+    response_description="JWT access token"
+)
+async def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+):
+    """
+    Authenticate user using form data. 
+    Dependency: OAuth2PasswordBearer.
+
+    Logs every failed authentication attempt at 'warning' level.
+    """
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        logger.warning("Failed login attempt for user: %s", form_data.username)
+        ...
+```

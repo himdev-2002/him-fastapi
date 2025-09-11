@@ -2,5 +2,8 @@
     "python.analysis.extraPaths": ["./app"],
     "python.formatting.provider": "autopep8",
     "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true
+    "python.linting.pylintEnabled": true,
+    "cursorpyright.analysis.extraPaths": [
+        "./app"
+    ]
 }

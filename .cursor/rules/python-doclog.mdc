@@ -1,0 +1,208 @@
+---
+
+description:Enhanced Documentation, Commenting & Logging Rules for Python Scripts
+
+globs: ["**/*.py"]
+alwaysApply: true
+
+---
+
+## 1. Docstring Documentation Standards
+
+### Function, Method, and Property Documentation
+- Always use docstrings (triple double quotes) for public functions, methods, and properties.
+- For private/internal functions (prefixed with `_`), include a brief docstring unless trivially simple.
+- Structure each docstring with:
+  - **Short summary** as the first line.
+  - **Longer description** for purpose, context, or rationale (optional).
+  - **Args/Parameters:** name (with type hint), explanation, and notable constraints or formats.
+  - **Returns:** type, description, and value semantics.
+  - **Raises:** all exceptions that may be thrown under standard conditions.
+  - **Examples:** usage patterns for non-trivial functions, using doctest-style if possible.
+  - **Side-effects or important notes:** e.g., “This function acquires a lock...”
+
+```python
+def fetch_data(
+    url: str,
+    timeout: int = 10
+) -> dict:
+    """
+    Fetch JSON data from a RESTful API endpoint.
+
+    Args:
+        url (str): The API endpoint URL.
+        timeout (int): Timeout in seconds (default: 10).
+
+    Returns:
+        dict: Parsed JSON data from the response.
+
+    Raises:
+        requests.Timeout: If the request exceeds timeout.
+        requests.RequestException: For network issues or HTTP errors.
+
+    Example:
+        >>> data = fetch_data('https://api.example.com/info')
+    """
+    ...
+```
+
+---
+
+### Class Documentation
+- Every class must start with a docstring that states:
+  - Purpose and main responsibilities,
+  - Overview of key methods or properties (if helpful),
+  - Any usage patterns or design caveats,
+  - Constructor arguments and requirements.
+
+```python
+class ReportScheduler:
+    """
+    Service for managing periodic report generation and dispatch.
+
+    Args:
+        interval (int): Report interval in minutes.
+
+    Example:
+        scheduler = ReportScheduler(interval=60)
+        scheduler.start()
+    """
+```
+
+---
+
+### Module- and File-Level Documentation
+- Place a docstring at the top of every file, describing:
+  - The module’s primary function and scope.
+  - Main classes, functions, and their relationships.
+  - External dependencies, side effects, or command-line usage (if any).
+
+```python
+"""
+reports.py
+
+Aggregates business reporting logic. Imports `db`, `scheduler`.
+Can be run as a script to trigger immediate report generation.
+
+Usage:
+    python reports.py --user=alice@example.com
+"""
+```
+
+---
+
+## 2. Inline Commenting Best Practices
+
+- Use inline comments for non-obvious business logic, "why" decisions, or to clarify intent—never to restate code.
+- Place comments above the line(s) they clarify, not beside (unless for short explanations).
+- Use section comments to break up and identify distinct computation blocks in longer functions.
+- Update or remove comments as code evolves to avoid misleading documentation.
+
+```python
+# Apply bonus interest only for legacy accounts (opened before 2010)
+if user.join_year < 2010:
+    apply_bonus_interest(user)
+```
+
+---
+
+### Special Inline Comments
+
+- Use TODO, FIXME, NOTE, HACK, and similar conventions with your name/initials and date for traceability.
+
+```python
+# TODO(jane, 2024-06): Migrate to async logic when endpoint supports it.
+```
+
+---
+
+## 3. Logging Practices
+
+- Always use Python’s standard logging library (`import logging`). Never use print() for logs.
+- Define a logger per module: `logger = logging.getLogger(__name__)`.
+- Log at appropriate levels:
+  - `logger.debug`: fine-grained diagnostic info,
+  - `logger.info`: routine operations,
+  - `logger.warning`: unexpected but non-blocking events,
+  - `logger.error`: errors that require attention,
+  - `logger.critical`: severe conditions.
+- Logging statements should include relevant context (user id, request id, etc.) where applicable.
+- Log all exceptions, including stack traces if appropriate (`exc_info=True`).
+
+```python
+import logging
+logger = logging.getLogger(__name__)
+
+def process_order(order_id: str, user_id: int) -> None:
+    logger.info("Processing order %s for user %d", order_id, user_id)
+    try:
+        # ...processing logic...
+    except SomeSpecificException as e:
+        logger.error("Order %s failed: %s", order_id, e, exc_info=True)
+        raise
+```
+
+---
+
+## 4. Type Hinting and Annotations
+
+- Always use type hints for all function arguments and return values.
+- Explicitly annotate class fields and properties whenever possible to support static analysis.
+
+```python
+def send_mail(user: "User", subject: str, body: str) -> bool:
+```
+
+---
+
+## 5. Comprehensive Example
+
+```python
+"""
+email_notifier.py
+
+Provides utilities for sending templated notification emails to users.
+Depends on: `smtplib`, `jinja2`.
+
+Functions:
+    send_notification_email
+    render_email_template
+
+Typical Usage:
+    send_notification_email(user, "Welcome!", data={"promo_code": "1234"})
+"""
+
+import logging
+from typing import Dict, Any
+
+logger = logging.getLogger(__name__)
+
+def send_notification_email(user: "User", subject: str, data: Dict[str, Any]) -> None:
+    """
+    Send a notification email to a user.
+
+    Args:
+        user (User): Recipient user object.
+        subject (str): Email subject line.
+        data (Dict[str, Any]): Template context data for email body.
+
+    Raises:
+        EmailSendError: If email dispatch fails.
+
+    Example:
+        send_notification_email(user, "Reset your password", data={...})
+    """
+    logger.info("Sending notification email to user_id=%d, subject='%s'", user.id, subject)
+    # ... actual sending code ...
+    logger.debug("Email content: %s", rendered_content)
+```
+
+---
+
+**Additional Enhancements**
+- Prefer Google or NumPy docstring style for consistency.
+- For public/package code, auto-generate and maintain API docs using tools like Sphinx or pdoc.
+- Consider using structured logging (JSON, etc.) for large production systems.
+- Document all environment variables and configuration parameters centrally, e.g., in settings module docstrings.
+
+---
