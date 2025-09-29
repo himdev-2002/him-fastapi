@@ -3,10 +3,23 @@
 import inspect
 import shortuuid
 from fastapi import Request
+from passlib.hash import bcrypt
+import bcrypt as _bcrypt
 
 def is_awaitable(obj):
     return inspect.isawaitable(obj) or hasattr(obj, "__await__")
 
+def hash_password(password: str) -> str:
+    try:
+        return bcrypt.hash(password)
+    except Exception as e:
+        print(f"Error during password hashing: {e}")
+        print(f"Using bcrypt library")
+        try:
+            return _bcrypt.hashpw(password.encode('utf-8'), _bcrypt.gensalt()).decode('utf-8')
+        except Exception as e:
+            print(f"Error during password hashing: {e}")
+            return None
 
 def verify_password(plain_password: str, hashed: str) -> bool:
     """
@@ -14,13 +27,14 @@ def verify_password(plain_password: str, hashed: str) -> bool:
     Prefers passlib.hash.bcrypt.verify if available, otherwise uses bcrypt.checkpw.
     """
     try:
-        from passlib.hash import bcrypt
         return bcrypt.verify(plain_password, hashed)
-    except Exception:
+    except Exception as e:
+        print(f"Error during password verification: {e}")
+        print(f"Using bcrypt library")
         try:
-            import bcrypt as _bcrypt
             return _bcrypt.checkpw(plain_password.encode('utf-8'), hashed.encode('utf-8'))
-        except Exception:
+        except Exception as e:
+            print(f"Error during password verification: {e}")
             # If neither library is available, return False
             return False
         

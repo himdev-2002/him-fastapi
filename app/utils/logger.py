@@ -4,7 +4,6 @@ import colorlog
 from logging.handlers import TimedRotatingFileHandler
 # from datetime import datetime
 from app.core.config import settings
-from app.middlewares.context import get_request_id
 
 # Buat folder logs kalau belum ada
 os.makedirs("logs", exist_ok=True)
@@ -50,7 +49,7 @@ file_formatter = loging.Formatter(
     datefmt="%Y-%m-%d %H:%M:%S.%MS"
 )
 
-def create_act_handler(filename, act, when="midnight", interval=1, backup_count=7):
+def create_act_handler(filename, act, when="H", interval=1, backup_count=7):
     handler = TimedRotatingFileHandler(
         filename,
         # maxBytes=max_bytes,
@@ -60,8 +59,8 @@ def create_act_handler(filename, act, when="midnight", interval=1, backup_count=
         encoding="utf-8",
         utc=False
     )
-    handler.suffix = "%Y-%m-%d.log"
-    handler.extMatch = r"^\d{4}-\d{2}-\d{2}.log$"
+    # handler.suffix = "%Y-%m-%d.log"
+    # handler.extMatch = r"^\d{4}-\d{2}-\d{2}.log$"
     handler.setFormatter(file_formatter)
     handler.addFilter(ActFilter(act))
     return handler
@@ -111,6 +110,9 @@ def log_api(
     act: str = "DEBUG",
     tx_id: str = None
 ):
+    # Import here to avoid circular import
+    from app.middlewares.context import get_request_id
+    
     # log_time = datetime.utcnow().isoformat()
     user_info = user or "-"
     route_info = route or "-"

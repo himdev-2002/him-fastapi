@@ -6,8 +6,11 @@ from app.core.config import settings
 import asyncio
 
 # Read DB urls from settings
-SQLALCHEMY_DATABASE_URL = settings.DB_URL
+# SQLALCHEMY_DATABASE_URL = settings.DB_URL
+SQLALCHEMY_DATABASE_URL = getattr(settings, "DB_URL", settings.DB_URL)
 SQLALCHEMY_DATABASE_URL_ASYNC = getattr(settings, "DB_URL_ASYNC", settings.DB_URL)
+SQLALCHEMY_DATABASE_URL_TXONLY = getattr(settings, "DB_TXONLY_URL", settings.DB_URL)
+SQLALCHEMY_DATABASE_URL_TXONLY_ASYNC = getattr(settings, "DB_TXONLY_URL_ASYNC", settings.DB_URL)
 
 # Engines and session factories (sync + async)
 engine_sync = create_engine(
@@ -22,10 +25,26 @@ engine_async = create_async_engine(
 	future=True,
 	connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL_ASYNC else {},
 )
+engine_txonly = create_engine(
+	SQLALCHEMY_DATABASE_URL_TXONLY,
+	echo= getattr(settings, "LOG_LEVEL", "INFO") == "DEBUG",
+	future=True,
+	connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL_TXONLY else {},
+)
+engine_txonly_async = create_async_engine(
+	SQLALCHEMY_DATABASE_URL_TXONLY_ASYNC,
+	echo= getattr(settings, "LOG_LEVEL", "INFO") == "DEBUG",
+	future=True,
+	connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL_TXONLY_ASYNC else {},
+)
 
 DBSessionSync = sessionmaker(autocommit=False, autoflush=False, bind=engine_sync)
 DBSessionAsync = async_sessionmaker(
 	autocommit=False, autoflush=False, bind=engine_async, expire_on_commit=False, class_=AsyncSession
+)
+DBSessionTxonly = sessionmaker(autocommit=False, autoflush=False, bind=engine_txonly)
+DBSessionTxonlyAsync = async_sessionmaker(
+	autocommit=False, autoflush=False, bind=engine_txonly_async, expire_on_commit=False, class_=AsyncSession
 )
 Base = declarative_base()
 
@@ -44,6 +63,18 @@ async def get_db_async():
 	async with DBSessionAsync() as session:
 		yield session
 
+def get_db_txonly():
+	"""Dependency that yields a sync DB session."""
+	db = DBSessionTxonly()
+	try:
+		yield db
+	finally:
+		db.close()
+
+async def get_db_txonly_async():
+	"""Dependency that yields an async DB session."""
+	async with DBSessionTxonlyAsync() as session:
+		yield session
 
 def test_sync_connection(timeout: int = 5) -> bool:
 	"""

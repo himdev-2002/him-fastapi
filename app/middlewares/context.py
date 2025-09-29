@@ -1,6 +1,7 @@
 # context_request.py
 import contextvars
 import random
+import re
 import shortuuid
 from fastapi import Request
 from app.utils.helpers import generate_tx_id
@@ -15,11 +16,13 @@ def get_request_id() -> str:
 
 async def set_request_id(request: Request, call_next):
     # Bisa pakai header `X-Request-ID`, atau auto generate
-    req_id = request.headers.get("X-Request-ID", f"req-{shortuuid.uuid()}-{id(request)}")
-    if not req_id or req_id == '':
-        rand_digits = str(random.randint(1000, 9999))
-        req_id = f"req-{shortuuid.uuid()}-{rand_digits}"
-    request.state.req_id = req_id
+    if not getattr(request.state, "req_id", None):
+        req_id = request.headers.get("X-Request-ID", f"{shortuuid.uuid()}-{id(request)}")
+        if not req_id or req_id == '':
+            rand_digits = str(random.randint(1000, 9999))
+            req_id = f"{shortuuid.uuid()}-{rand_digits}"
+        request.state.req_id = req_id
+    req_id = request.state.req_id
     token = ctx_req_id.set(req_id)
     response = await call_next(request)
     ctx_req_id.reset(token)

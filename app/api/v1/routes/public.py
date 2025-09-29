@@ -22,12 +22,12 @@ def gen_bcrypt(payload: HashRequest):
     if not payload.password:
         raise HTTPException(status_code=400, detail="password required")
     h = make_bcrypt(payload.password)
-    log_api(msg="Generated password bcrypt hash", act="auth_log", level="INFO")
+    log_api(msg="Generated password bcrypt hash", act="auth", level="INFO")
     return HashResponse(hash=h)
 
 @router.post("/bcrypt/verify", response_model=VerifyResponse)
 def verify_bcrypt(payload: VerifyRequest):
     from app.utils.helpers import verify_password
     valid = verify_password(payload.password, payload.hash)
-    log_api(msg=f"Verify password result={valid}", act="auth_log", level="INFO")
+    log_api(msg=f"Verify password result={valid}", act="auth", level="INFO")
     return VerifyResponse(valid=valid)

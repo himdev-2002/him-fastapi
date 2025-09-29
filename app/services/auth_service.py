@@ -89,9 +89,9 @@ class JWTSession:
 		}
 		token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 		log_api(f"Refresh token created: {token}", user=str(user_id), route=route, act="auth", tx_id=tx_id, level="INFO")
-		log_api(f"Adding token to whitelist: {payload['jti']}", user=str(user_id), route=route, act="auth", tx_id=tx_id, level="INFO")
-		JWTSession.add_token_whitelist(user_id, payload["jti"])
-		log_api(f"Token added to whitelist: {payload['jti']}", user=str(user_id), route=route, act="auth", tx_id=tx_id, level="INFO")
+		# log_api(f"Adding token to whitelist: {payload['jti']}", user=str(user_id), route=route, act="auth", tx_id=tx_id, level="INFO")
+		# JWTSession.add_token_whitelist(user_id, payload["jti"])
+		# log_api(f"Token added to whitelist: {payload['jti']}", user=str(user_id), route=route, act="auth", tx_id=tx_id, level="INFO")
 		return token
 
 	@staticmethod
@@ -110,7 +110,7 @@ class JWTSession:
 			log_api(
 				msg=f"LOGOUT: user_id={user_id} uniq_key={uniq_key} jti={jti}",
 				user=str(user_id),
-				act="auth_log",
+				act="auth",
 				tx_id=uniq_key,
 				level="INFO"
 			)
@@ -130,40 +130,52 @@ class JWTSession:
 			return True
 
 	@staticmethod
-	def verify_access_token(token: str, user_id: int) -> Optional[dict]:
+	def verify_access_token(token: str, is_refresh: bool = False) -> Optional[dict]:
 		"""
 		Validasi token: harus ada di whitelist dan tidak ada di blacklist.
 		Jika valid, return payload JWT, jika tidak return None.
 		"""
+		log_api(f"Verifying access token: {token} is_refresh: {is_refresh}", act="auth", level="DEBUG")
 		try:
-			payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-			jti = payload.get("jti")
-			if redis_client.sismember(f"{REDIS_KEY_PREFIX}:blacklist:{user_id}", jti):
-				return None
-			if not redis_client.sismember(f"{REDIS_KEY_PREFIX}:whitelist:{user_id}", jti):
-				return None
+			options={}
+			if is_refresh:
+				options={"verify_exp": False}
+			payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM], options=options)
+			# if not is_refresh and int(payload["exp"]) < int(time.time()):
+			# 	return None
+			if not is_refresh:
+				jti = payload.get("jti")
+				user_id = payload.get("sub")
+				is_blacklist = redis_client.sismember(f"{REDIS_KEY_PREFIX}:blacklist:{user_id}", jti)
+				is_whitelist = redis_client.sismember(f"{REDIS_KEY_PREFIX}:whitelist:{user_id}", jti)
+				log_api(f"is blacklist: {is_blacklist}", act="auth", level="DEBUG")
+				log_api(f"is whitelist: {is_whitelist}", act="auth", level="DEBUG") 
+				if is_blacklist:
+					return None
+				if not is_whitelist:
+					return None
 			return payload
 		except Exception as e:
-			log_api(f"Failed to verify access token: {e}", user=str(user_id), act="auth", level="ERROR")
+			log_api(f"Failed to verify access token: {e}", act="auth", level="ERROR")
 			return None
 
 	@staticmethod
-	def refresh_access_token(refresh_token: str, user_id: int) -> Optional[str]:
+	def refresh_access_token(access_token: str, refresh_token: str, user_id: int) -> Optional[str]:
 		"""
 		Melakukan refresh access token, menghapus semua token whitelist user,
 		lalu membuat access token baru.
 		"""
 		try:
-			payload = jwt.decode(refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-			if int(payload["exp"]) < int(time.time()):
-				return None
-			uniq_key = payload.get("_key")
-			whitelist_key = f"{REDIS_KEY_PREFIX}:whitelist:{user_id}"
-			redis_client.delete(whitelist_key)
+			payload1 = jwt.decode(access_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+			uniq_key1 = payload.get("_key")
+			payload2 = jwt.decode(refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+			uniq_key2 = payload.get("_key")
+			jti = payload.get("jti")
+			JWTSession.remove_token_whitelist(user_id, jti)
 			log_api(
 				msg=f"REFRESH: user_id={user_id} uniq_key={uniq_key}",
 				user=str(user_id),
-				act="auth_log",
+				act="auth",
 				tx_id=uniq_key,
 				level="INFO"
 			)

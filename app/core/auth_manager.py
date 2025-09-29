@@ -11,7 +11,7 @@ from app.models.user import User
 from app.core.database import engine_sync
 from sqlalchemy import select
 from app.utils.database import map_to_pydantic
-from app.schemas.user import FullUserResponse
+from app.schemas.user import UserLoginResponse
 from app.utils.logger import log_api
 
 # Configure LoginManager
@@ -34,8 +34,8 @@ def load_user(id: str) -> User | None:
         with engine_sync.connect() as conn:
             result = conn.execute(query)
             res_data = result.first()
-            user = map_to_pydantic(res_data, FullUserResponse) if res_data else None
+            user = map_to_pydantic(res_data, UserLoginResponse) if res_data else None
             return user
     except Exception as e:
-        log_api(f"Error loading user {username}: {e}", act="auth", level="ERROR")
+        log_api(f"Error loading user {id}: {e}", act="auth", level="ERROR")
         return None

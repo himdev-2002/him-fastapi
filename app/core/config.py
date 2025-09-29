@@ -8,6 +8,8 @@ class Settings(BaseSettings):
 	DB_URL: str
 	DB_URL_ASYNC: str
 	DB_MIGRATE_URL: str
+	DB_TXONLY_URL: str
+	DB_TXONLY_URL_ASYNC: str
 	REDIS_HOST: str
 	REDIS_PORT: int
 	REDIS_DB: int
@@ -15,7 +17,7 @@ class Settings(BaseSettings):
 	REDIS_USERNAME: str
 	JWT_SECRET: str
 	JWT_ALGORITHM: str
-	JWT_EXEMPT_PATHS: list[str]
+	JWT_EX_PATHS: list[str]
 	JWT_ACCESS_EXPIRE_MINUTES: int = 15
 	JWT_REFRESH_EXPIRE_MINUTES: int = 43200
 	JWT_BLACKLIST_EXPIRE_SECONDS: int = 2592000

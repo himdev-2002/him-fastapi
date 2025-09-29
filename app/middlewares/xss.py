@@ -1,7 +1,8 @@
+import re
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-import re
+from app.utils.logger import log_api
 
 XSS_PATTERNS = [
     r"<script.*?>.*?</script>",
@@ -15,8 +16,6 @@ def has_xss(payload: str) -> bool:
             return True
     return False
 
-from fastapi.routing import APIRoute
-
 class XSSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Exclude by decorator
@@ -28,6 +27,7 @@ class XSSMiddleware(BaseHTTPMiddleware):
         #         return await call_next(request)
 
         # if request.method in ("POST", "PUT", "PATCH"):
+        log_api(f"Checking for XSS in request", act="xss", level="DEBUG")
         body = await request.body()
         if has_xss(body.decode(errors="ignore")):
             return JSONResponse(status_code=400, content={"detail": "Potential XSS detected"})

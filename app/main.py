@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from app.core.config import settings
 
 from app.middlewares.context import set_request_id
-from app.api.v1.api import api_router
+from app.api.v1 import api_router
 from app.middlewares import setup_middlewares
 from app.utils.logger import log_api
 from app.core import database

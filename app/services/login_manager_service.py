@@ -12,11 +12,13 @@ Features:
 """
 
 from datetime import timedelta
+import random
 import time
 import uuid
 import jwt
 from typing import Optional
 from fastapi_login import LoginManager
+import shortuuid
 
 from app.core.config import settings
 from app.core.redis_client import redis_client, REDIS_KEY_PREFIX
@@ -125,7 +127,7 @@ class LoginManagerAuthService:
 			log_api(
 				f"Token blacklisted: user_id={user_id} uniq_key={uniq_key} jti={jti}",
 				user=str(user_id),
-				act="auth_log",
+				act="auth",
 				tx_id=uniq_key,
 				level="INFO"
 			)
@@ -205,12 +207,13 @@ class LoginManagerAuthService:
 		)
 		
 		try:
+			rand_digits = str(random.randint(1000, 9999))
+			req_id = f"{shortuuid.uuid()}-{rand_digits}"
 			# Create token using LoginManager
 			data = {
 				"sub": str(user.id),
 				"jti": str(uuid.uuid4()),
-				"_key": str(uuid.uuid4()),
-				"exp": int(time.time()) + ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+				"_key": req_id,
 			}
 			token = self.manager.create_access_token(data=data,expires=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
 			
@@ -242,7 +245,7 @@ class LoginManagerAuthService:
 			)
 			return None
 	
-	def create_refresh_token(self, user_id: int, uniq_key: str) -> str:
+	def create_refresh_token(self, user_id: int, uniq_key: str, jti: str) -> str:
 		"""
 		Create refresh token JWT with uniq_key.
 		
@@ -268,14 +271,13 @@ class LoginManagerAuthService:
 		try:
 			payload = {
 				"sub": str(user_id),
-				"jti": str(uuid.uuid4()),
-				"_key": uniq_key,
-				"exp": int(time.time()) + REFRESH_TOKEN_EXPIRE_MINUTES * 60,
+				"jti": jti,
+				"_key": uniq_key
 			}
 			token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 			
 			# Add to whitelist
-			self.add_token_whitelist(user_id, payload["jti"])
+			# self.add_token_whitelist(user_id, payload["jti"])
 			
 			log_api(
 				f"Refresh token created successfully", 
@@ -298,38 +300,31 @@ class LoginManagerAuthService:
 			)
 			return None
 	
-	def refresh_access_token(self, refresh_token: str, user_id: int) -> Optional[str]:
+	def refresh_access_token(self, user_id: int, uniq_key: str, jti: str) -> (str,str):	
 		"""
 		Refresh access token, clear whitelist, and create new access token.
 		
 		Args:
 			refresh_token (str): The refresh token.
-			user_id (int): The user ID.
 			
 		Returns:
-			Optional[str]: New access token if successful, None otherwise.
+			(str,str): New access token and jti if successful, None otherwise.
 		"""
-		try:
-			payload = jwt.decode(refresh_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-			if int(payload["exp"]) < int(time.time()):
-				return None
-			
-			uniq_key = payload.get("_key")
-			
+		try:			
 			# Clear whitelist for user
-			whitelist_key = f"{REDIS_KEY_PREFIX}:whitelist:{user_id}"
-			redis_client.delete(whitelist_key)
+			self.remove_token_whitelist(user_id, jti)
 			
 			log_api(
 				f"Token refresh: user_id={user_id} uniq_key={uniq_key}",
 				user=str(user_id),
-				act="auth_log",
+				act="auth",
 				tx_id=uniq_key,
 				level="INFO"
 			)
 			
 			# Create new access token with same uniq_key
-			return self.create_access_token_with_uniq(user_id, uniq_key)
+			token, jti = self.create_access_token_with_uniq(user_id, uniq_key)
+			return token, jti
 		except Exception as e:
 			log_api(
 				f"Failed to refresh access token: {e}", 
@@ -337,9 +332,9 @@ class LoginManagerAuthService:
 				act="auth", 
 				level="ERROR"
 			)
-			return None
+			return None, None
 	
-	def create_access_token_with_uniq(self, user_id: int, uniq_key: str) -> str:
+	def create_access_token_with_uniq(self, user_id: int, uniq_key: str) -> (str,str):
 		"""
 		Create access token JWT with specific uniq_key (for refresh).
 		
@@ -348,7 +343,7 @@ class LoginManagerAuthService:
 			uniq_key (str): Unique key to include in token.
 			
 		Returns:
-			str: The generated access token.
+			(str,str): The generated access token and jti.
 		"""
 		try:
 			payload = {
@@ -359,7 +354,7 @@ class LoginManagerAuthService:
 			}
 			token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 			self.add_token_whitelist(user_id, payload["jti"])
-			return token
+			return token, payload["jti"]
 		except Exception as e:
 			log_api(
 				f"Failed to create access token with uniq_key: {e}", 
@@ -367,4 +362,4 @@ class LoginManagerAuthService:
 				act="auth", 
 				level="ERROR"
 			)
-			return None
+			return None, None

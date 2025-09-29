@@ -5,19 +5,25 @@ All notable changes to this project will be documented in this file. See [conven
 ---
 ## [unreleased]
 
+### Bug Fixes
+
+- **(refresh token)** repair and enhance refresh token - ([8694e52](https://repo-url/commit/8694e5213e23a79897a6be33907fc1358dc4a9d1)) - himdev-2002
+
 ### Features
 
 - **(changelog)** add command to generate change log using git cliff - ([ed17317](https://repo-url/commit/ed17317e9809a6c7252f4683c606022579026589)) - VIVOBOOK-HIM\HIM
 - **(command)** add command to run project in dev and prod mode - ([61c8e3d](https://repo-url/commit/61c8e3d0d1c37eae52671120f03850c2770180f4)) - himdev-2002
-- **(logger)** add function to logging - ([638dbcc](https://repo-url/commit/638dbcc4b7f4851eba1177375e5f9fbf7ed4e270)) - himdev-2002
+- **(jwt)** add jwt auth - ([57fd059](https://repo-url/commit/57fd059788c5f2d698a110204322c94f39ed24b7)) - himdev-2002
+- **(logger)** add function to logging - ([bfbffa7](https://repo-url/commit/bfbffa77754b450746cac729c0acc2ebeef67bf6)) - himdev-2002
 
 
 ### Commit Statistics
 
-- 3 commit(s) contributed to the release.
-- 0 day(s) passed between the first and last commit.
-- 3 commit(s) parsed as conventional.
+- 5 commit(s) contributed to the release.
+- 26 day(s) passed between the first and last commit.
+- 5 commit(s) parsed as conventional.
 - 0 linked issue(s) detected in commits.
+- 26 day(s) passed between releases.
 
 ---
 ## [1.0.0b] - 2025-09-03

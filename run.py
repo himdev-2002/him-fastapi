@@ -158,6 +158,19 @@ def git_commit(message: str = typer.Argument(..., help="Commit message"), tag: s
 	except Exception as e:
 		typer.echo(f"Error during git commit/tag: {e}", err=True)
 
+@app.command()
+def git_commit_amend(message: str = typer.Argument(..., help="Commit message"), tag: str = typer.Option(None, help="Tag to add after commit")):
+	"""Commit amend changes to git with a message and optional tag."""
+	try:
+		subprocess.check_call(["git", "add", "."])
+		subprocess.check_call(["git", "commit", "--amend", "-m", message])
+		typer.echo(f"Committed amend with message: {message}")
+		if tag:
+			subprocess.check_call(["git", "tag", tag])
+			typer.echo(f"Tag '{tag}' added.")
+	except Exception as e:
+		typer.echo(f"Error during git commit/tag amend: {e}", err=True)
+
 if __name__ == "__main__":
     try:
         app()
