@@ -35,15 +35,28 @@
 #           python run.py run-prod-gunicorn
 #
 
+import sys
 import time
 import typer
 import subprocess
 from pathlib import Path
 import os
 import multiprocessing
+from dotenv import load_dotenv, find_dotenv
 # import uvicorn
 
 app = typer.Typer()
+
+# Definisikan konteks untuk menyimpan konfigurasi
+class AppContext:
+    def __init__(self):
+        self.config = {
+            "wait": False,
+            "is_service": False
+        }
+
+# Buat objek konteks
+ctx_obj = AppContext()
 
 def activate_venv(venv_path: str = "venv-3.10"):
     """Aktifkan virtualenv sebelum menjalankan server"""
@@ -65,6 +78,29 @@ def activate_venv(venv_path: str = "venv-3.10"):
     typer.echo(f"✅ Script {activate_script} ditemukan.")
     os.system(f".\\{activate_script}")
     typer.echo(f"✅ Virtualenv {venv_path} telah diaktifkan.")
+
+def load_env_file(env_file: str = None):
+    """
+    Memuat variabel lingkungan dari file .env
+    
+    Args:
+        env_file (str, optional): Path ke file .env. Jika None, akan mencari file .env di direktori saat ini.
+    """
+    # Jika env_file ditentukan, gunakan path tersebut
+    if env_file:
+        if not os.path.exists(env_file):
+            typer.echo(f"File .env tidak ditemukan di: {env_file}")
+            raise typer.Exit(code=1)
+        load_dotenv(env_file)
+    else:
+        # Jika env_file tidak ditentukan, cari file .env di direktori saat ini
+        dotenv_path = find_dotenv()
+        if not dotenv_path:
+            typer.echo("File .env tidak ditemukan")
+            raise typer.Exit(code=1)
+        load_dotenv(dotenv_path)
+    
+    typer.echo(f"Berhasil memuat konfigurasi dari file {env_file}")
 
 @app.command(help="Run FastAPI app in development mode (uvicorn reload)")
 def run_dev(host: str = typer.Option("127.0.0.1", help="Host to run the app on"),
@@ -171,14 +207,69 @@ def git_commit_amend(message: str = typer.Argument(..., help="Commit message"), 
 	except Exception as e:
 		typer.echo(f"Error during git commit/tag amend: {e}", err=True)
 
+
+
+@app.command(help="Run Postgre Server")
+def run_pg_server_windows(ctx: typer.Context, env_file: str = typer.Option(".env.pglocal", help="Env file for pgsql")):
+    """
+    Jalankan Postgre Server.
+    """
+    # Memuat variabel lingkungan
+    ctx_obj.config["is_service"] = True
+    load_env_file(env_file)
+    # pg_drive = os.getenv("PG_DRIVE")
+    pg_dir = os.getenv("PG_DIR")
+    pg_data = os.getenv("PG_DATA")
+    pg_log = os.getenv("PG_LOG")
+    # exec_path = Path("\pgsql\bin\pg_ctl.exe")
+
+    dir_path = Path(pg_dir)
+    if not dir_path.exists():
+        typer.echo(f"❌ Directory {pg_dir} tidak ditemukan.")
+        raise typer.Exit(1)
+    
+    exec_path = Path((pg_dir + "\\pgsql\\bin\\pg_ctl.exe"))
+    if not exec_path.exists():
+        typer.echo(f"❌ Executable {exec_path} tidak ditemukan.")
+        raise typer.Exit(1)
+    
+    data_path = dir_path / pg_data
+    if not data_path.exists():
+        typer.echo(f"❌ Directory {pg_data} tidak ditemukan.")
+        raise typer.Exit(1)
+    
+    log_path = dir_path / pg_log
+    if not log_path.exists():
+        typer.echo(f"❌ Directory {pg_log} tidak ditemukan.")
+        raise typer.Exit(1)
+
+    cmd = [
+        exec_path.as_posix(),
+        "-D",
+        data_path.as_posix(),
+        "-l",
+        log_path.as_posix(),
+        "start"
+    ]
+    typer.echo(f"Menjalankan: {' '.join(cmd)}")
+    subprocess.check_call(cmd)
+    ctx.exit(0)  # Exit dengan kode 0 (sukses)
+
 if __name__ == "__main__":
     try:
         app()
     except Exception as e:
         typer.echo(f"❌ Error: {e}", err=True)
     finally:
-        wait = 3
-        typer.echo(f"Exiting in {wait}s...")
-        time.sleep(wait)
-        # if os.name == "nt":
-        #     input("👉 Tekan Enter untuk keluar...")
+        if ctx_obj.config["is_service"]:
+            typer.echo("👉 Service berjalan.")
+        else:
+            if ctx_obj.config["wait"]:
+                input("👉 Tekan Enter untuk keluar...")
+            else:
+                wait = 3
+                typer.echo(f"Exiting in {wait}s...")
+                time.sleep(wait)
+            # if os.name == "nt":
+            #     input("👉 Tekan Enter untuk keluar...")
+            sys.exit(0)

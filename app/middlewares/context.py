@@ -4,7 +4,6 @@ import random
 import re
 import shortuuid
 from fastapi import Request
-from app.utils.helpers import generate_tx_id
 
 # ContextVar untuk menyimpan request_id per-request
 ctx_req_id: contextvars.ContextVar[str] = contextvars.ContextVar("req_id", default="-")
@@ -30,6 +29,9 @@ async def set_request_id(request: Request, call_next):
 
 def get_tx_id() -> str:
     return ctx_tx_id.get()
+        
+def generate_tx_id(act:str) -> str:
+    return f"tx-{act}-{shortuuid.uuid()}"
 
 async def reset_tx_id(token: contextvars.Token[str]):
     ctx_tx_id.reset(token)

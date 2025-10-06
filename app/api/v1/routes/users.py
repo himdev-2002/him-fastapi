@@ -3,13 +3,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.middlewares.context import set_route, set_tx_id, reset_tx_id, reset_route
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.schemas.user import UserResponse, UserCreate, UserUpdate, FullUserResponse
+from app.schemas.user import JsonFullUserResponse, JsonUserResponse, UserResponse, UserCreate, UserUpdate, FullUserResponse
 from app.services import user_service
 from app.api.deps import get_current_user, get_current_active_user
 from app.models.user import User
 from app.utils.logger import log_api
-from app.utils.helpers import generate_tx_id, get_current_route
+from app.utils.helpers import end_route, get_current_route, init_route
 from app.schemas.response import MessageResponse
+from app.core.constants import RES_CODE
 
 router = APIRouter(prefix="/users", tags=["user"])
 
@@ -57,7 +58,7 @@ async def create_user(request: Request, user: UserCreate, current_user: User = D
 
 @router.get(
 	"/me", 
-	response_model=UserResponse,
+	response_model=JsonUserResponse,
 	summary="Get current user profile",
 	description="Get the profile information of the currently authenticated user.",
 	tags=["user"],
@@ -73,22 +74,21 @@ async def get_current_user_profile(request: Request, current_user: User = Depend
 	Returns:
 		UserResponse: Current user profile information.
 	"""
-	tx_id = generate_tx_id(act="current_user")
-	route = get_current_route(request)
-	setattr(request.state, "user", current_user.username)
-	setattr(request.state, "tx_id", tx_id)
-	setattr(request.state, "act", "user")
-	tx_token = await set_tx_id(tx_id)
-	route_token = await set_route(route['path'])
+	tx_id, route, tx_token, route_token = await init_route(request, current_user.username, "user", "current_user")
 	log_api(f"Getting profile for user: {current_user.username}", user=str(current_user.id), act="user", level="INFO", tx_id=tx_id, route=route['path'])
-	await reset_tx_id(tx_token)
-	await reset_route(route_token)
-	return current_user
+	await end_route(tx_token, route_token)
+	return JsonUserResponse(
+		tx=tx_id,
+		stat=True,
+		msg="OK",
+		code=RES_CODE.USER+RES_CODE.OK_CODE+1,
+		dt=current_user
+	)
 
 
 @router.get(
 	"/{user_id}", 
-	response_model=FullUserResponse,
+	response_model=JsonFullUserResponse,
 	summary="Get user by ID",
 	description="Get user information by user ID. Requires authentication.",
 	tags=["user"],
@@ -132,12 +132,16 @@ async def read_user(
 		)
 	await reset_tx_id(tx_token)
 	await reset_route(route_token)
-	return db_user
+	return JsonFullUserResponse(
+		stat=True,
+		msg="OK",
+		dt=db_user
+	)
 
 
 @router.put(
 	"/{user_id}", 
-	response_model=UserResponse,
+	response_model=JsonUserResponse,
 	summary="Update user",
 	description="Update user information by user ID. Requires authentication.",
 	tags=["user"],
@@ -174,11 +178,20 @@ def update_user(
 	log_api(f"Updating user {user_id} by user {current_user.username}", user=str(current_user.id), act="update_user", level="INFO", tx_id=tx_id, route=route['path'])
 	db_user = user_service.update_user(db, user_id, user)
 	if not db_user:
+		return JsonUserResponse(
+			stat=False,
+			msg="NOK",
+			dt=None
+		)
 		raise HTTPException(
 			status_code=status.HTTP_404_NOT_FOUND, 
 			detail="User not found"
 		)
-	return db_user
+	return JsonUserResponse(
+		stat=True,
+		msg="OK",
+		dt=db_user
+	)
 
 
 @router.delete(

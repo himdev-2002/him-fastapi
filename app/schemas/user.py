@@ -1,6 +1,9 @@
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, EmailStr
+from typing import Optional
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+from app.schemas.response import SingleDataResponse
 
 class UserBase(BaseModel):
 	username: str
@@ -31,3 +34,13 @@ class FullUserResponse(UserCreate):
 	updated_at: datetime
 
 	model_config = ConfigDict(from_attributes=True)
+
+class PublicFullUserResponse(FullUserResponse):
+# Override password field to exclude it
+    password: Optional[str] = Field(None, exclude=True)
+
+class JsonUserResponse(SingleDataResponse):
+	dt: UserResponse | None = None
+
+class JsonFullUserResponse(SingleDataResponse):
+	dt: PublicFullUserResponse | None = None

@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. See [conven
 
 ### Bug Fixes
 
-- **(refresh token)** repair and enhance refresh token - ([8694e52](https://repo-url/commit/8694e5213e23a79897a6be33907fc1358dc4a9d1)) - himdev-2002
+- **(refresh token)** repair and enhance refresh token - ([609145f](https://repo-url/commit/609145fe2a50cc52d6ea86485e57ac59b9845d40)) - himdev-2002
 
 ### Features
 
@@ -16,14 +16,18 @@ All notable changes to this project will be documented in this file. See [conven
 - **(jwt)** add jwt auth - ([57fd059](https://repo-url/commit/57fd059788c5f2d698a110204322c94f39ed24b7)) - himdev-2002
 - **(logger)** add function to logging - ([bfbffa7](https://repo-url/commit/bfbffa77754b450746cac729c0acc2ebeef67bf6)) - himdev-2002
 
+### Other (unconventional)
+
+- **(auth)** enhance code structure and logic authentication - ([1e53fae](https://repo-url/commit/1e53fae781d1c48323a4ae2466d7a6a69a86f422)) - himdev-2002
+
 
 ### Commit Statistics
 
-- 5 commit(s) contributed to the release.
-- 26 day(s) passed between the first and last commit.
-- 5 commit(s) parsed as conventional.
+- 6 commit(s) contributed to the release.
+- 33 day(s) passed between the first and last commit.
+- 6 commit(s) parsed as conventional.
 - 0 linked issue(s) detected in commits.
-- 26 day(s) passed between releases.
+- 33 day(s) passed between releases.
 
 ---
 ## [1.0.0b] - 2025-09-03

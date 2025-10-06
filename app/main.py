@@ -1,7 +1,10 @@
 import asyncio
 import sys
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+import traceback
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from app.core.config import settings
 
 from app.middlewares.context import set_request_id
@@ -98,6 +101,66 @@ app = FastAPI(
 	redoc_url=settings.REDOC_URL,
 	lifespan=lifespan
 )
+
+# Exception handler untuk semua exception
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    error_traceback = traceback.format_exc()
+    log_api(
+        msg=f"Unhandled exception: {str(exc)}",
+        act="exception",
+        level="ERROR"
+    )
+    
+    return JSONResponse(
+        status_code=500,
+        content={
+            "message": "Internal Server Error",
+            "detail": str(exc),
+            "traceback": error_traceback.split("\n") if settings.LOG_LEVEL == "DEBUG" and settings.ENV == "development" else None
+        }
+    )
+
+# Exception handler untuk HTTPException
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    log_api(
+        msg=f"HTTPException: {exc.status_code} - {exc.detail}",
+        act="exception",
+        level="ERROR"
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail}
+    )
+
+# Exception handler untuk validasi request
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    error_detail = exc.errors()
+    error_messages = []
+    
+    for error in error_detail:
+        error_messages.append({
+            "loc": error.get("loc", []),
+            "msg": error.get("msg", ""),
+            "type": error.get("type", "")
+        })
+    
+    log_api(
+        msg=f"Validation error: {error_messages}",
+        act="exception",
+        level="ERROR"
+    )
+    return JSONResponse(
+        status_code=422,
+        content={
+            "message": "Validation Error",
+            "detail": error_messages,
+            "body": exc.body
+        }
+    )
+
 
 # oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

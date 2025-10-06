@@ -11,6 +11,8 @@ venv-3.10/
 
 # Logs
 *.log
+*.log.*
+logs/
 
 # Docker
 *.dockerignore

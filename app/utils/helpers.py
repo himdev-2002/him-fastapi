@@ -6,6 +6,8 @@ from fastapi import Request
 from passlib.hash import bcrypt
 import bcrypt as _bcrypt
 
+from app.middlewares.context import generate_tx_id, reset_route, reset_tx_id, set_route, set_tx_id
+
 def is_awaitable(obj):
     return inspect.isawaitable(obj) or hasattr(obj, "__await__")
 
@@ -37,9 +39,6 @@ def verify_password(plain_password: str, hashed: str) -> bool:
             print(f"Error during password verification: {e}")
             # If neither library is available, return False
             return False
-        
-def generate_tx_id(act:str) -> str:
-    return f"tx-{act}-{shortuuid.uuid()}"
 
 def get_current_route(request: Request) -> dict:
     """
@@ -52,3 +51,17 @@ def get_current_route(request: Request) -> dict:
         "endpoint": request.scope.get("endpoint").__name__ if request.scope.get("endpoint") else None,
         "route_name": request.scope.get("route").name if request.scope.get("route") else None,
     }
+
+async def init_route(request: Request, user: str, parent_act: str, act: str) -> tuple[str, dict, str, str]:
+    tx_id = generate_tx_id(act=act)
+    route = get_current_route(request)
+    setattr(request.state, "user", user)
+    setattr(request.state, "tx_id", tx_id)
+    setattr(request.state, "act", parent_act)
+    tx_token = await set_tx_id(tx_id)
+    route_token = await set_route(route['path'])
+    return tx_id, route, tx_token, route_token
+
+async def end_route(tx_token: str, route_token: str) -> None:
+    await reset_tx_id(tx_token)
+    await reset_route(route_token)
