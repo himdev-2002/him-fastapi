@@ -16,18 +16,19 @@ All notable changes to this project will be documented in this file. See [conven
 - **(jwt)** add jwt auth - ([57fd059](https://repo-url/commit/57fd059788c5f2d698a110204322c94f39ed24b7)) - himdev-2002
 - **(logger)** add function to logging - ([bfbffa7](https://repo-url/commit/bfbffa77754b450746cac729c0acc2ebeef67bf6)) - himdev-2002
 
-### Other (unconventional)
+### Refactoring
 
-- **(auth)** enhance code structure and logic authentication - ([1e53fae](https://repo-url/commit/1e53fae781d1c48323a4ae2466d7a6a69a86f422)) - himdev-2002
+- **(auth)** enhance code structure and logging - ([931daef](https://repo-url/commit/931daefc909fcb55a1f92239f6d2480e3d59b555)) - himdev-2002
+- **(auth)** enhance code structure and logic authentication - ([eaa68e5](https://repo-url/commit/eaa68e56fb74f92198bb725dc0cdbb3a18e06fa0)) - himdev-2002
 
 
 ### Commit Statistics
 
-- 6 commit(s) contributed to the release.
-- 33 day(s) passed between the first and last commit.
-- 6 commit(s) parsed as conventional.
+- 7 commit(s) contributed to the release.
+- 34 day(s) passed between the first and last commit.
+- 7 commit(s) parsed as conventional.
 - 0 linked issue(s) detected in commits.
-- 33 day(s) passed between releases.
+- 34 day(s) passed between releases.
 
 ---
 ## [1.0.0b] - 2025-09-03

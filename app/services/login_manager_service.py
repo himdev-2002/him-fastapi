@@ -24,7 +24,7 @@ from app.core.config import settings
 from app.core.redis_client import redis_client, REDIS_KEY_PREFIX
 from app.models.user import User
 from app.utils.logger import log_api
-from app.middlewares.context import get_tx_id, get_route
+from app.core.context import get_tx_id, get_route
 
 # Token expiration configuration
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_EXPIRE_MINUTES 

@@ -12,6 +12,7 @@ from .rate_limit import RateLimitMiddleware
 from .jwt_auth import JWTAuthMiddleware
 from .sql_injection import SQLInjectionMiddleware
 from .xss import XSSMiddleware
+from .context import ContextMiddleware
 
 def setup_middlewares(app):
 	log_api(
@@ -19,6 +20,8 @@ def setup_middlewares(app):
 		act="init_app",
 		level="INFO"
 	)
+	# Context
+	app.add_middleware(ContextMiddleware)
 	# Logging
 	app.add_middleware(LoggingMiddleware)
 	# IP/domain whitelist/blacklist

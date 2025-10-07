@@ -19,18 +19,16 @@ Dependencies:
 
 """
 
-from turtle import st
 import jwt
-from fastapi import APIRouter, HTTPException, Response, status, Request, Depends
+from fastapi import APIRouter, Response, status, Request, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from app.api.deps import get_current_user
-from app.middlewares.context import generate_tx_id, set_tx_id, reset_tx_id, set_route, reset_route
-from app.schemas.auth import LoginRequest, LogoutResponse, TokenResponse, RefreshRequest, LogoutRequest
+from app.schemas.auth import LogoutResponse, TokenResponse, RefreshRequest
 from app.services.login_manager_service import LoginManagerAuthService
 from app.services.user_service import authenticate_user
 from app.core.config import settings
 from app.utils.logger import log_api
-from app.utils.helpers import end_route, get_current_route, init_route
+from app.utils.helpers import end_route, init_route
 from app.core.auth_manager import manager
 from app.models.user import User
 from app.schemas.response import NoDataResponse
@@ -345,7 +343,6 @@ async def logout(response: Response, request: Request, current_user: User = Depe
         )
         code = status.HTTP_500_INTERNAL_SERVER_ERROR
         msg = e.message
-    
 
     await end_route(tx_token, route_token)
     if msg != "OK" or code != status.HTTP_200_OK:

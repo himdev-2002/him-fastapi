@@ -2,7 +2,7 @@
 DEFAULT_PAGE_SIZE = 10
 
 class RES_CODE:
-    AUTH = 10000
-    USER = 20000
+    AUTH = 100000
+    USER = 200000
 
-    OK_CODE = 1000
+    OK_CODE = 10000

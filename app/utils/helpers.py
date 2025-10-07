@@ -6,7 +6,7 @@ from fastapi import Request
 from passlib.hash import bcrypt
 import bcrypt as _bcrypt
 
-from app.middlewares.context import generate_tx_id, reset_route, reset_tx_id, set_route, set_tx_id
+from app.core.context import generate_tx_id, reset_route, reset_tx_id, set_route, set_tx_id
 
 def is_awaitable(obj):
     return inspect.isawaitable(obj) or hasattr(obj, "__await__")
@@ -60,6 +60,7 @@ async def init_route(request: Request, user: str, parent_act: str, act: str) -> 
     setattr(request.state, "act", parent_act)
     tx_token = await set_tx_id(tx_id)
     route_token = await set_route(route['path'])
+    setattr(request.state, "route", route['path'])
     return tx_id, route, tx_token, route_token
 
 async def end_route(tx_token: str, route_token: str) -> None:

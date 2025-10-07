@@ -19,7 +19,6 @@ class LogoutResponse(BaseModel):
 	status: bool
 	message: str
 
-
 class TokenResponse(BaseModel):
 	access_token: str
 	refresh_token: str

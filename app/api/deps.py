@@ -8,7 +8,6 @@ and other common functionality across the application.
 from fastapi import Depends, HTTPException, status
 
 from app.core.auth_manager import manager
-from app.core.database import get_db
 from app.models.user import User
 from app.utils.logger import log_api
 
@@ -35,9 +34,9 @@ def get_current_user(user=Depends(manager)) -> User:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
-    
-    log_api(f"User authenticated: {user.username}", user=str(user.id), act="auth", level="DEBUG")
-    return user
+    elif type(user) == User:
+        log_api(f"User authenticated: {user.username}", user=str(user.id), act="auth", level="DEBUG")
+        return user
 
 
 def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:

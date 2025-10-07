@@ -9,7 +9,7 @@ from sqlalchemy import select
 
 from app.utils.logger import log_api
 from app.utils.helpers import verify_password, hash_password
-from app.middlewares.context import get_tx_id, get_route
+from app.core.context import get_tx_id, get_route
 
 def authenticate_user(username: str, password: str):
 	# print("Authenticating user:", username)
@@ -85,11 +85,14 @@ def get_user(db: Session, user_id: int):
 		log_api(f"Error during user retrieval: {e}", user=str(user_id), route=route, act="get_user", level="ERROR", tx_id=tx_id)
 		return None
 
-def update_user(db: Session, user_id: int, user_update: UserUpdate):
-	user = db.query(User).filter(User.id == user_id).first()
+def update_user(db: Session, user: User, user_update: UserUpdate, current_user: User):
+	# user = db.query(User).filter(User.id == user_id).first()
 	if user:
-		user.name = user_update.name
+		user.username = user_update.username
 		user.email = user_update.email
+		user.is_active = user_update.is_active
+		user.updated_by = current_user.id
+		user.updated_at = datetime.now()
 		db.commit()
 		db.refresh(user)
 	return user

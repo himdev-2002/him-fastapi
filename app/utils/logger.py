@@ -32,7 +32,7 @@ class ActFilter(loging.Filter):
 # Formatter untuk console (berwarna)
 console_formatter = colorlog.ColoredFormatter(
     # "%(log_color)s%(asctime)s %(levelname)s|%(req_id)s|%(pid)s|%(user)s|%(route)s|%(act)s|%(tx_id)s%(reset)s : %(message)s",
-    f"%(white)s%(asctime)s%(reset)s %(log_color)s%(levelname)s%(reset)s|%(req_id)s|%(green)s%(pid)s%(reset)s|%(user)s|%(yellow)s%(route)s%(reset)s|%(cyan)s%(act)s%(reset)s|%(bold_red)s%(tx_id)s%(reset)s : %(message)s",
+    f"%(white)s%(asctime)s%(reset)s %(log_color)s%(levelname)s%(reset)s|%(req_id)s|%(green)s%(pid)s%(reset)s|%(user)s|%(client_ip_type)s|%(client_ip)s|%(yellow)s%(route)s%(reset)s|%(cyan)s%(act)s%(reset)s|%(bold_red)s%(tx_id)s%(reset)s : %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S.%MS",
     log_colors={
         "DEBUG": "white",
@@ -45,7 +45,7 @@ console_formatter = colorlog.ColoredFormatter(
 
 # Formatter untuk file (tanpa warna)
 file_formatter = loging.Formatter(
-    "%(asctime)s %(levelname)s|%(req_id)s|%(pid)s|%(user)s|%(route)s|%(act)s|%(tx_id)s : %(message)s",
+    "%(asctime)s %(levelname)s|%(req_id)s|%(pid)s|%(user)s|%(client_ip_type)s|%(client_ip)s|%(route)s|%(act)s|%(tx_id)s : %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S.%MS"
 )
 
@@ -67,6 +67,9 @@ def create_act_handler(filename, act, when="H", interval=1, backup_count=7):
 
 act_config = {
     "logs/init_app.log": "init_app",
+    "logs/access.log": "access",
+    "logs/limiter.log": "limiter",
+    "logs/public.log": "public",
     "logs/auth.log": "auth",
     "logs/user.log": "user",
     "logs/debug.log": "debug",
@@ -108,29 +111,44 @@ def log_api(
     route: str = None,
     level: str = "INFO",
     act: str = "DEBUG",
-    tx_id: str = None
+    tx_id: str = None,
+    client_ip: str = None,
+    client_ip_type: str = None
 ):
     # Import here to avoid circular import
-    from app.middlewares.context import get_request_id
+    from app.core.context import get_request_id, get_client_ip, get_client_ip_type, get_route, get_tx_id
+    from app.api.deps import get_current_user
     
     # log_time = datetime.utcnow().isoformat()
-    user_info = user or "-"
-    route_info = route or "-"
+    current_user = get_current_user()
+    user_info = user or str(current_user.id if current_user else "-") or "-"
+    route_info = route or get_route() or "-"
     req_id = get_request_id() or "-"
-    tx_info = tx_id or "-"
+    tx_info = tx_id or get_tx_id() or "-"
     process_id = os.getpid()
+    client_ip = client_ip or get_client_ip() or "-"
+    client_ip_type = client_ip_type or get_client_ip_type() or "-"
     log_msg = (
         f"{msg}"
     )
     # loging.debug(log_msg)
-    
+    extra = {
+        "req_id": req_id, 
+        "user": user_info, 
+        "route": route_info, 
+        "act": act, 
+        "tx_id": tx_info, 
+        "pid": process_id,
+        "client_ip": client_ip,
+        "client_ip_type": client_ip_type
+    }
     if level == "CRITICAL":
-        logger.critical(log_msg, extra={"req_id": req_id, "user": user_info, "route": route_info, "act": act, "tx_id": tx_info, "pid": process_id})
+        logger.critical(log_msg, extra=extra)
     elif level == "ERROR":
-        logger.error(log_msg, extra={"req_id": req_id, "user": user_info, "route": route_info, "act": act, "tx_id": tx_info, "pid": process_id})
+        logger.error(log_msg, extra=extra)
     elif level == "WARNING":
-        logger.warning(log_msg, extra={"req_id": req_id, "user": user_info, "route": route_info, "act": act, "tx_id": tx_info, "pid": process_id})
+        logger.warning(log_msg, extra=extra)
     elif level == "INFO":
-        logger.info(log_msg, extra={"req_id": req_id, "user": user_info, "route": route_info, "act": act, "tx_id": tx_info, "pid": process_id})
+        logger.info(log_msg, extra=extra)
     else:
-        logger.debug(log_msg, extra={"req_id": req_id, "user": user_info, "route": route_info, "act": act, "tx_id": tx_info, "pid": process_id})
+        logger.debug(log_msg, extra=extra)

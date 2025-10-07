@@ -24,6 +24,9 @@ class Settings(BaseSettings):
 	LOG_LEVEL: str
 	SWAGGER_URL: str = "/docs"
 	REDOC_URL: str = "/redoc"
+	RATE_LIMIT_DEFAULT: str = "20/minute"
+	RATE_LIMIT_HIGH: str = "100/minute"
+	RATE_LIMIT_LOW: str = "5/minute"
 	IP_WHITELIST: list[str] = []
 	IP_BLACKLIST: list[str] = []
 	DOMAIN_WHITELIST: list[str] = []

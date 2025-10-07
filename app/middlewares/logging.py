@@ -23,7 +23,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
 		process_time = (time.time() - start_time) * 1000
 		route = request.url.path
 		user = getattr(request.state, "user", None)
-		act = getattr(request.state, "act", None)
+		act = getattr(request.state, "act", "access")
 		tx_id = getattr(request.state, "tx_id", None)
 		msg = f"{request.method} {route} completed_in={process_time:.2f}ms status_code={response.status_code}"
 		log_api(
