@@ -20,7 +20,8 @@ Database Table: m_users
 """
 
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import CheckConstraint, Column, Integer, String, DateTime, Boolean, UniqueConstraint
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -80,3 +81,14 @@ class User(Base):
     
     # Audit field - timestamp when account was last updated (auto-set on update)
     updated_at = Column(DateTime, default=datetime.now)
+
+    user_profiles = relationship('UserProfile', back_populates='user', cascade='none')
+    profiles = relationship('Profile', secondary='r_user_profile', back_populates='user', cascade='none')
+
+    __table_args__ = (
+        UniqueConstraint('username', name='user_uniq_1'),
+        UniqueConstraint('email', name='user_uniq_2')
+    )
+
+    def __repr__(self):
+        return f"<User(id={self.id}, username={self.username}, email={self.email})>"

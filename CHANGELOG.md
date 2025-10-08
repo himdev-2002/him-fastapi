@@ -18,17 +18,18 @@ All notable changes to this project will be documented in this file. See [conven
 
 ### Refactoring
 
-- **(auth)** enhance code structure and logging - ([931daef](https://repo-url/commit/931daefc909fcb55a1f92239f6d2480e3d59b555)) - himdev-2002
+- **(auth)** enhance code structure and logging - ([b5d5989](https://repo-url/commit/b5d5989769d018ee6a9ff7583d2f0135db816c86)) - himdev-2002
 - **(auth)** enhance code structure and logic authentication - ([eaa68e5](https://repo-url/commit/eaa68e56fb74f92198bb725dc0cdbb3a18e06fa0)) - himdev-2002
+- **(log)** enhance logging system - ([3dd14e1](https://repo-url/commit/3dd14e190a0271021010b2c443c1f10537160c7f)) - himdev-2002
 
 
 ### Commit Statistics
 
-- 7 commit(s) contributed to the release.
-- 34 day(s) passed between the first and last commit.
-- 7 commit(s) parsed as conventional.
+- 8 commit(s) contributed to the release.
+- 35 day(s) passed between the first and last commit.
+- 8 commit(s) parsed as conventional.
 - 0 linked issue(s) detected in commits.
-- 34 day(s) passed between releases.
+- 35 day(s) passed between releases.
 
 ---
 ## [1.0.0b] - 2025-09-03

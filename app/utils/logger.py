@@ -66,7 +66,7 @@ def create_act_handler(filename, act, when="H", interval=1, backup_count=7):
     return handler
 
 act_config = {
-    "logs/init_app.log": "init_app",
+    "logs/app.log": "app",
     "logs/access.log": "access",
     "logs/limiter.log": "limiter",
     "logs/public.log": "public",
@@ -112,22 +112,22 @@ def log_api(
     level: str = "INFO",
     act: str = "DEBUG",
     tx_id: str = None,
-    client_ip: str = None,
-    client_ip_type: str = None
+    req_id: str = None
 ):
     # Import here to avoid circular import
-    from app.core.context import get_request_id, get_client_ip, get_client_ip_type, get_route, get_tx_id
+    from app.core.context import get_request_id, get_client_ip, get_client_ip_type, get_route, get_tx_id, get_log_act
     from app.api.deps import get_current_user
     
     # log_time = datetime.utcnow().isoformat()
     current_user = get_current_user()
     user_info = user or str(current_user.id if current_user else "-") or "-"
     route_info = route or get_route() or "-"
-    req_id = get_request_id() or "-"
+    req_id = req_id or get_request_id() or "-"
     tx_info = tx_id or get_tx_id() or "-"
     process_id = os.getpid()
-    client_ip = client_ip or get_client_ip() or "-"
-    client_ip_type = client_ip_type or get_client_ip_type() or "-"
+    client_ip = get_client_ip() or "-"
+    client_ip_type = get_client_ip_type() or "-"
+    act_info = act or get_log_act() or "-"
     log_msg = (
         f"{msg}"
     )
@@ -136,7 +136,7 @@ def log_api(
         "req_id": req_id, 
         "user": user_info, 
         "route": route_info, 
-        "act": act, 
+        "act": act_info, 
         "tx_id": tx_info, 
         "pid": process_id,
         "client_ip": client_ip,

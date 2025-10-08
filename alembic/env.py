@@ -31,10 +31,16 @@ from app.models import *  # import all models
 
 target_metadata = Base.metadata
 
+def include_object(object, name, type_, reflected, compare_to):
+    if hasattr(object, "info") and object.info.get("skip_autogenerate", False):
+        return False
+    return True
+
 def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True, compare_type=True
+        url=url, target_metadata=target_metadata, literal_binds=True, compare_type=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -49,7 +55,8 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata, compare_type=True
+            connection=connection, target_metadata=target_metadata, compare_type=True,
+            include_object=include_object,
         )
 
         with context.begin_transaction():

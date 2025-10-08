@@ -24,6 +24,8 @@ class Settings(BaseSettings):
 	LOG_LEVEL: str
 	SWAGGER_URL: str = "/docs"
 	REDOC_URL: str = "/redoc"
+	LIMITER_ENABLED: bool = True 
+	LIMITER_STORAGE_URI: str = "redis://localhost:6379/0"
 	RATE_LIMIT_DEFAULT: str = "20/minute"
 	RATE_LIMIT_HIGH: str = "100/minute"
 	RATE_LIMIT_LOW: str = "5/minute"

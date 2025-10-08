@@ -1,6 +1,7 @@
 
 # Tambahkan helper function jika diperlukan
 import inspect
+from fastapi.routing import APIRoute
 import shortuuid
 from fastapi import Request
 from passlib.hash import bcrypt
@@ -52,9 +53,34 @@ def get_current_route(request: Request) -> dict:
         "route_name": request.scope.get("route").name if request.scope.get("route") else None,
     }
 
+def get_route_tags(request: Request) -> list[str]:
+    """Dependency to get the tags of the current route."""
+    route = None
+    for r in request.app.routes:
+        if isinstance(r, APIRoute) and r.path_regex.match(request.scope["path"]):
+            route = r
+            break
+    
+    if route and hasattr(route, "tags"):
+        return route.tags
+    return []
+
+def get_route_name(request: Request) -> str:
+    """Dependency to get the name of the current route."""
+    route = None
+    for r in request.app.routes:
+        if isinstance(r, APIRoute) and r.path_regex.match(request.scope["path"]):
+            route = r
+            break
+    
+    if route and hasattr(route, "name"):
+        return route.name
+    return None
+
 async def init_route(request: Request, user: str, parent_act: str, act: str) -> tuple[str, dict, str, str]:
     tx_id = generate_tx_id(act=act)
     route = get_current_route(request)
+    print(f"init_route: {act} {tx_id} {parent_act} {user} {route['path']}")
     setattr(request.state, "user", user)
     setattr(request.state, "tx_id", tx_id)
     setattr(request.state, "act", parent_act)

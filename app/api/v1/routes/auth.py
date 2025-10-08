@@ -32,7 +32,11 @@ from app.utils.helpers import end_route, init_route
 from app.core.auth_manager import manager
 from app.models.user import User
 from app.schemas.response import NoDataResponse
-router = APIRouter(prefix="/auth", tags=["auth"])
+from app.core.constants import RES_CODE
+from app.core.limiter import limiter
+
+ACT = "auth"
+router = APIRouter(prefix="/auth", tags=[ACT])
 
 # Initialize authentication service
 auth_service = LoginManagerAuthService(manager)
@@ -43,9 +47,11 @@ auth_service = LoginManagerAuthService(manager)
     response_model=TokenResponse | NoDataResponse,
     summary="Authenticate user and generate tokens",
     description="Authenticate user credentials and return JWT access and refresh tokens.",
-    tags=["auth"],
+    name="login",
+    
     response_description="JWT tokens for authenticated user"
 )
+@limiter.limit(settings.RATE_LIMIT_LOW)
 async def login(response: Response, request: Request, data: OAuth2PasswordRequestForm = Depends()):
     """
     Authenticate user using form data and generate JWT tokens.
@@ -60,108 +66,77 @@ async def login(response: Response, request: Request, data: OAuth2PasswordReques
         NoDataResponse: If authentication fails or token generation fails.
     """
     # Create refresh token
-    msg = "OK"
-    code = status.HTTP_200_OK
+    msg,rid,code,rescode = "OK",100,RES_CODE.AUTH,status.HTTP_200_OK
     access_token = None
     refresh_token = None
-    tx_id, route, tx_token, route_token = await init_route(request, data.username, "auth", "login")
     log_api(
         f"Login attempt for user: {data.username}", 
         user=data.username, 
-        route=route['path'], 
-        act="auth", 
-        level="INFO", 
-        tx_id=tx_id
+        level="INFO"
     )
     try:
         # Authenticate user
         user = authenticate_user(data.username, data.password)
-        log_api(
-            f"Authentication result: {user is not None}", 
-            route=route['path'], 
-            user=data.username, 
-            act="auth", 
-            level="DEBUG", 
-            tx_id=tx_id
-        )
-        
         if not user:
-            # await end_route(tx_token, route_token)
-            code = status.HTTP_401_UNAUTHORIZED
+            code = code+rid+1
+            rescode = status.HTTP_401_UNAUTHORIZED
             msg = "Invalid credentials"
-            # return NoDataResponse(
-            #     tx=tx_id,
-            #     stat=False,
-            #     msg="Invalid credentials"
-            # )
-            # raise HTTPException(
-            #     status_code=status.HTTP_401_UNAUTHORIZED, 
-            #     detail="Invalid credentials"
-            # )
+            log_api(
+                f"Authentication failed [{code}]: {user is not None}", 
+                user=data.username, 
+                level="ERROR"
+            )
         else:
-            # Create access token using LoginManager
             access_token = auth_service.create_access_token(user)
             if not access_token:
-                code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                code = code+rid+2
+                rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
                 msg = "Failed to generate access token"
-                # await end_route(tx_token, route_token)
-                # raise HTTPException(
-                #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-                #     detail="Failed to generate access token"
-                # )
-            else:
                 log_api(
-                    f"Decoding access token for refresh token creation", 
-                    route=route['path'], 
+                    f"Failed to generate access token [{code}]", 
                     user=data.username, 
-                    act="auth", 
-                    level="INFO", 
-                    tx_id=tx_id
+                    level="ERROR"
                 )
+            else:
                 access_payload = jwt.decode(access_token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
                 uniq_key = access_payload.get("_key")
                 jti = access_payload.get("jti")
                 log_api(
                     f"Uniq key extracted: {uniq_key}", 
-                    route=route['path'], 
                     user=data.username, 
-                    act="auth", 
-                    level="DEBUG", 
-                    tx_id=tx_id
+                    level="DEBUG"
                 )
                 
                 refresh_token = auth_service.create_refresh_token(user.id, uniq_key=uniq_key, jti=jti)
                 if not refresh_token:
-                    code = status.HTTP_500_INTERNAL_SERVER_ERROR
+                    code = code+rid+3
+                    rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
                     msg = "Failed to generate refresh token"
-                    # await end_route(tx_token, route_token)
-                    # raise HTTPException(
-                    #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-                    #     detail="Failed to generate refresh token"
-                    # )
+                    log_api(
+                        f"Failed to generate refresh token [{code}]", 
+                        user=data.username, 
+                        level="ERROR"
+                    )
+                else:
+                    code = code+RES_CODE.OK_CODE+rid
+                    log_api(
+                        f"Authentication successful [{code}]", 
+                        user=data.username, 
+                        level="INFO"
+                    )
     except Exception as e:
-        log_api(
-            f"Failed to authenticate user: {e}", 
-            route=route['path'], 
-            user=data.username, 
-            act="auth", 
-            level="ERROR", 
-            tx_id=tx_id
-        )
-        code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        code = code+rid
+        rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
         msg = e.message
-        # await end_route(tx_token, route_token)
-        # raise HTTPException(
-        #     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-        #     detail="Failed to generate refresh token"
-        # )
+        log_api(
+            f"Failed to authenticate user [{code}]: {e}", 
+            user=data.username, 
+            level="ERROR"
+        )
 
-    await end_route(tx_token, route_token)
-    if msg != "OK" or code != status.HTTP_200_OK:
-        response.status_code = code
+    response.status_code = rescode
+    if msg != "OK" or code < RES_CODE.OK_CODE:
         return NoDataResponse(
-            tx=tx_id,
-            req=request.state.req_id,
             stat=False,
             msg=msg,
             code=code
@@ -170,12 +145,8 @@ async def login(response: Response, request: Request, data: OAuth2PasswordReques
         log_api(
             f"Login successful", 
             user=data.username, 
-            route=route['path'], 
-            act="auth", 
-            level="INFO", 
-            tx_id=tx_id
+            level="INFO"
         )
-        response.status_code = code
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,

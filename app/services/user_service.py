@@ -13,9 +13,7 @@ from app.core.context import get_tx_id, get_route
 
 def authenticate_user(username: str, password: str):
 	# print("Authenticating user:", username)
-	tx_id = get_tx_id()
-	route = get_route()
-	log_api(f"Authenticating user: {username}", user=username, route=route, act="auth", level="INFO", tx_id=tx_id)
+	log_api(f"Authenticating user: {username}", user=username, level="INFO")
 	query = select(User).where(User.username == username)
 	try:
 		with engine_sync.connect() as conn:
@@ -25,21 +23,21 @@ def authenticate_user(username: str, password: str):
 			user = map_to_pydantic(res_data, UserLoginResponse) if res_data else None
 			# print(user)
 			if not user:
-				log_api(f"User not found", user=username, route=route, act="auth", level="ERROR", tx_id=tx_id)
+				log_api(f"User not found", user=username, level="ERROR")
 				return None
 
 			if user.is_active is False or user.is_active is None:
-				log_api(f"User is not active", user=username, route=route, act="auth", level="ERROR", tx_id=tx_id)
+				log_api(f"User is not active", user=username, level="ERROR")
 				return None
 			
 			# TODO: hash password for comparison
 			if not verify_password(password, user.password):
-				log_api(f"Invalid password", user=username, route=route, act="auth", level="ERROR", tx_id=tx_id)
+				log_api(f"Invalid password", user=username, level="ERROR")
 				return None
-			log_api(f"User authenticated successfully", user=str(user.id), route=route, act="auth", level="INFO", tx_id=tx_id)
+			log_api(f"User authenticated successfully", user=str(user.id), level="INFO")
 			return user
 	except Exception as e:
-		log_api(f"Error during authentication: {e}", user=username, route=route, act="auth", level="ERROR", tx_id=tx_id)
+		log_api(f"Error during authentication: {e}", user=username, level="ERROR")
 		return None
 
 def create_user(db: Session, user: UserCreate, current_user: User):

@@ -13,11 +13,12 @@ from .jwt_auth import JWTAuthMiddleware
 from .sql_injection import SQLInjectionMiddleware
 from .xss import XSSMiddleware
 from .context import ContextMiddleware
+from .cleansing import CleansingMiddleware
 
 def setup_middlewares(app):
 	log_api(
 		msg="Starting Configure Middlewares...",
-		act="init_app",
+		act="app",
 		level="INFO"
 	)
 	# Context
@@ -38,9 +39,11 @@ def setup_middlewares(app):
 	app.add_middleware(SQLInjectionMiddleware)
 	# XSS protection
 	app.add_middleware(XSSMiddleware)
+	# Cleansing
+	# app.add_middleware(CleansingMiddleware)
 	log_api(
 		msg="Configure Middlewares Done.",
-		act="init_app",
+		act="app",
 		level="INFO"
 	)
 

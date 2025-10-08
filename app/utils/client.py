@@ -30,10 +30,8 @@ def client_ip_dependency(request: Request) -> [str, str]:
     request.state.client_ip_type = current_client_info[1]
     log_api(
         f"Client IP: {current_client_info[0]} {current_client_info[1]}",
-        act="info",
+        act="client",
         level="DEBUG",
-        client_ip=current_client_info[0],
-        client_ip_type=current_client_info[1]
     )
     return current_client_info
 

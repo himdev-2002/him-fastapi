@@ -62,7 +62,7 @@ async def create_user(response: Response, request: Request,
 
 	await end_route(tx_token, route_token)
 	response.status_code = rescode
-	if msg != "OK" or code < code+RES_CODE.OK_CODE:
+	if msg != "OK" or code < RES_CODE.OK_CODE:
 		return NoDataResponse(
 			# tx=tx_id,
 			# req=request.state.req_id,
@@ -169,7 +169,7 @@ async def read_user(response: Response, request: Request,
 
 	await end_route(tx_token, route_token)
 	response.status_code = rescode
-	if msg != "OK" or code < code+RES_CODE.OK_CODE:
+	if msg != "OK" or code < RES_CODE.OK_CODE:
 		return NoDataResponse(
 			# tx=tx_id,
 			# req=request.state.req_id,
@@ -251,7 +251,7 @@ async def update_user(response: Response, request: Request,
 
 	await end_route(tx_token, route_token)
 	response.status_code = rescode
-	if msg != "OK" or code < code+RES_CODE.OK_CODE:
+	if msg != "OK" or code < RES_CODE.OK_CODE:
 		return NoDataResponse(
 			stat=False,
 			msg=msg,
@@ -326,7 +326,7 @@ async def delete_user(response: Response, request: Request,
 
 	await end_route(tx_token, route_token)
 	response.status_code = rescode
-	if msg != "OK" or code < code+RES_CODE.OK_CODE:
+	if msg != "OK" or code < RES_CODE.OK_CODE:
 		return NoDataResponse(
 			stat=False,
 			msg=msg,
