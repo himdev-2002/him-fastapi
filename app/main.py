@@ -71,14 +71,27 @@ async def lifespan(app: FastAPI):
 		log_api(msg=f"Async DB connection failed: {exc}", act="app", level="CRITICAL")
 		raise
 	yield
-	if is_awaitable(database.engine_sync.dispose()):
+	# Dispose of database engines properly
+	if is_awaitable(database.engine_sync.dispose):
 		await database.engine_sync.dispose()
-	if is_awaitable(database.engine_async.dispose()):
+	else:
+		database.engine_sync.dispose()
+	
+	if is_awaitable(database.engine_async.dispose):
 		await database.engine_async.dispose()
-	if is_awaitable(database.engine_txonly.dispose()):
+	else:
+		database.engine_async.dispose()
+	
+	if is_awaitable(database.engine_txonly.dispose):
 		await database.engine_txonly.dispose()
-	if is_awaitable(database.engine_txonly_async.dispose()):
+	else:
+		database.engine_txonly.dispose()
+	
+	if is_awaitable(database.engine_txonly_async.dispose):
 		await database.engine_txonly_async.dispose()
+	else:
+		database.engine_txonly_async.dispose()
+	
 	log_api(msg="Application shutdown", act="app", level="INFO")
 	
 # @app.on_event("startup")

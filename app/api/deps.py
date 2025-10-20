@@ -28,13 +28,14 @@ def get_current_user(user=Depends(manager)) -> User:
     Raises:
         HTTPException: If user is not authenticated or token is invalid.
     """
+    # print(("GET CURRENT USER", user))
     if not user:
         log_api("Authentication failed: No user found", act="auth", level="WARNING")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated"
         )
-    elif type(user) == User:
+    elif isinstance(user, User):
         log_api(f"User authenticated: {user.username}", user=str(user.id), act="auth", level="DEBUG")
         return user
 

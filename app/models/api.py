@@ -47,7 +47,7 @@ class Api(Base):
     updated_at = Column(DateTime, default=datetime.now)
 
     profile_api_perms = relationship('ApiPermission', back_populates='api', cascade='none')
-    profile = relationship('Profile', secondary='r_api_permission', back_populates='api_perms') # many to one
+    profile = relationship('Profile', secondary='r_api_permission', back_populates='api_perms', overlaps="profile_api_perms") # many to one
 
     __table_args__ = (
         UniqueConstraint('method', 'version', 'act', 'name', name='api_uniq_1'),

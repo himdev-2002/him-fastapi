@@ -32,10 +32,10 @@ class Profile(Base):
     updated_at = Column(DateTime, default=datetime.now)
 
     user_profiles = relationship('UserProfile', back_populates='profile', cascade='none')
-    user = relationship('User', secondary='r_user_profile', back_populates='profiles') # many to many
+    user = relationship('User', secondary='r_user_profile', back_populates='profiles', overlaps="user_profiles") # many to many
 
-    profile_api_perms = relationship('ApiPermission', back_populates='profile', cascade='none')
-    api_perms = relationship('Api', secondary='r_api_permission', back_populates='profile', cascade='none') # one to many
+    profile_api_perms = relationship('ApiPermission', back_populates='profile', overlaps="api_perms", cascade='none')
+    api_perms = relationship('Api', secondary='r_api_permission', back_populates='profile', overlaps="profile_api_perms,profile,api", cascade='none') # one to many
     
     __table_args__ = (
         UniqueConstraint('name', name='profile_uniq_1'),

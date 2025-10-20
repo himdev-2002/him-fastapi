@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 	DOMAIN_BLACKLIST: list[str] = []
 	CORS_ALLOW_ORIGINS: list[str] = ["*"]
 	CORS_ALLOW_METHODS: list[str] = ["*"]
-	CORS_ALLOW_HEADERS: list[str] = ["*"]
+	CORS_ALLOW_HEADERS: list[str] = ["*", "Authorization", "Content-Type"]
 	CORS_ALLOW_CREDENTIALS: bool = True
 
 	class Config:

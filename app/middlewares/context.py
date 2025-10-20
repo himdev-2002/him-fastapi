@@ -55,6 +55,7 @@ class ContextMiddleware(BaseHTTPMiddleware):
 		route = get_current_route(request)
 		route_token = set_route(route['path'])
 		request.state.route_token = route_token or None
+		# print("ContextMiddleware",request.state.__dict__)
 		response = await call_next(request)
 		
 		if req_token:

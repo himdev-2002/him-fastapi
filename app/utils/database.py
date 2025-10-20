@@ -37,6 +37,7 @@ def map_to_pydantic(
     
     - Bisa handle single row atau list
     - Bisa handle ORM object atau Row (partial select)
+    - Otomatis mengecualikan field yang di-exclude di schema
     """
 
     if result is None:
@@ -47,8 +48,10 @@ def map_to_pydantic(
         models = []
         for row in result:
             if hasattr(row, "__table__"):  
-                # ORM object
-                models.append(schema.model_validate(row, from_attributes=True))
+                # ORM object - buat dict tanpa field yang di-exclude
+                excluded_fields = _get_excluded_fields(schema)
+                row_dict = _convert_orm_to_dict(row, excluded_fields)
+                models.append(schema.model_validate(row_dict))
             else:
                 # Row atau tuple dari partial select
                 models.append(schema.model_validate(dict(row._mapping)))
@@ -56,10 +59,53 @@ def map_to_pydantic(
 
     # Kalau single ORM object
     if hasattr(result, "__table__"):
-        return schema.model_validate(result, from_attributes=True)
+        excluded_fields = _get_excluded_fields(schema)
+        row_dict = _convert_orm_to_dict(result, excluded_fields)
+        return schema.model_validate(row_dict)
 
     # Kalau single Row
     if hasattr(result, "_mapping"):
         return schema.model_validate(dict(result._mapping))
 
     raise ValueError(f"Unsupported result type: {type(result)}")
+
+def _get_excluded_fields(schema: Type[BaseModel]) -> set[str]:
+    """
+    Mendapatkan field yang di-exclude dari schema Pydantic.
+    """
+    excluded_fields = set()
+    
+    # Periksa field annotations untuk field dengan exclude=True
+    for field_name, field_info in schema.model_fields.items():
+        if hasattr(field_info, 'exclude') and field_info.exclude:
+            excluded_fields.add(field_name)
+    
+    return excluded_fields
+
+def _convert_orm_to_dict(orm_obj, excluded_fields: set[str]) -> dict:
+    """
+    Konversi ORM object ke dictionary, mengecualikan field yang di-exclude.
+    """
+    result_dict = {}
+    
+    # Iterasi melalui semua attribute dari ORM object
+    for attr_name in dir(orm_obj):
+        # Skip private attributes dan method
+        if attr_name.startswith('_'):
+            continue
+        
+        # Skip jika field di-exclude
+        if attr_name in excluded_fields:
+            continue
+            
+        # Dapatkan nilai attribute
+        try:
+            value = getattr(orm_obj, attr_name)
+            # Skip jika itu adalah method atau callable
+            if callable(value):
+                continue
+            result_dict[attr_name] = value
+        except AttributeError:
+            continue
+    
+    return result_dict

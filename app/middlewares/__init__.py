@@ -21,26 +21,27 @@ def setup_middlewares(app):
 		act="app",
 		level="INFO"
 	)
-	# Context
-	app.add_middleware(ContextMiddleware)
-	# Logging
-	app.add_middleware(LoggingMiddleware)
-	# IP/domain whitelist/blacklist
-	app.add_middleware(IPFilterMiddleware)
-	# CORS
-	add_cors_middleware(app)
-	# Security headers
-	app.add_middleware(SecurityHeadersMiddleware)
-	# Rate limit (dummy, bisa diganti slowapi)
-	app.add_middleware(RateLimitMiddleware)
-	# JWT Auth (aktifkan jika ingin proteksi endpoint)
-	app.add_middleware(JWTAuthMiddleware)
-	# SQL Injection protection
-	app.add_middleware(SQLInjectionMiddleware)
-	# XSS protection
-	app.add_middleware(XSSMiddleware)
+
 	# Cleansing
 	# app.add_middleware(CleansingMiddleware)
+	# 9. JWT Auth (aktifkan jika ingin proteksi endpoint)
+	app.add_middleware(JWTAuthMiddleware)
+	# 8. Rate limit (dummy, bisa diganti slowapi)
+	app.add_middleware(RateLimitMiddleware)
+	# 7. Security headers
+	app.add_middleware(SecurityHeadersMiddleware)
+	# 6. IP/domain whitelist/blacklist
+	app.add_middleware(IPFilterMiddleware)
+	# 5. XSS protection
+	app.add_middleware(XSSMiddleware)
+	# 4. SQL Injection protection
+	app.add_middleware(SQLInjectionMiddleware)
+	# 3. Logging
+	app.add_middleware(LoggingMiddleware)
+	# 2. Context
+	app.add_middleware(ContextMiddleware)
+	# 1. CORS
+	add_cors_middleware(app) 
 	log_api(
 		msg="Configure Middlewares Done.",
 		act="app",

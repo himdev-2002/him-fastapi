@@ -29,13 +29,27 @@ def load_user(id: str) -> User | None:
         User | None: User object if found, None otherwise.
     """
     try:
+        # print(("LOAD USER", id))
         query = select(User).where(User.id == int(id))
+        # print(("LOAD USER", query))
         # log_api(f"Loading user {id}", act="auth", level="INFO")
         with engine_sync.connect() as conn:
             result = conn.execute(query)
             res_data = result.first()
-            user = map_to_pydantic(res_data, UserLoginResponse) if res_data else None
-            return user
+            if res_data:
+                user = User(
+                    id=res_data.id,
+                    username=res_data.username,
+                    email=res_data.email,
+                    password=res_data.password,
+                    is_active=res_data.is_active,
+                    created_by=res_data.created_by,
+                    created_at=res_data.created_at,
+                    updated_by=res_data.updated_by,
+                    updated_at=res_data.updated_at
+                )
+                return user
+            return None
     except Exception as e:
         log_api(f"Error loading user {id}: {e}", act="auth", level="ERROR")
         return None

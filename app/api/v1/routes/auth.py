@@ -24,8 +24,8 @@ from fastapi import APIRouter, Response, status, Request, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from app.api.deps import get_current_user
 from app.schemas.auth import LogoutResponse, TokenResponse, RefreshRequest
-from app.services.login_manager_service import LoginManagerAuthService
-from app.services.user_service import authenticate_user
+from app.services.login_manager import LoginManagerAuthService
+from app.services.user import authenticate_user
 from app.core.config import settings
 from app.utils.logger import log_api
 from app.utils.helpers import end_route, init_route
@@ -48,7 +48,7 @@ auth_service = LoginManagerAuthService(manager)
     summary="Authenticate user and generate tokens",
     description="Authenticate user credentials and return JWT access and refresh tokens.",
     name="login",
-    
+    tags=["post"],
     response_description="JWT tokens for authenticated user"
 )
 @limiter.limit(settings.RATE_LIMIT_LOW)
@@ -158,7 +158,8 @@ async def login(response: Response, request: Request, data: OAuth2PasswordReques
     response_model=TokenResponse | NoDataResponse,
     summary="Refresh access token",
     description="Generate a new access token using a valid refresh token.",
-    tags=["auth"],
+    name="refresh_token",
+    tags=["post"],
     response_description="New access token and refresh token info"
 )
 async def refresh_token(response: Response, request: Request, data: RefreshRequest, current_user: User = Depends(get_current_user)):
@@ -239,7 +240,7 @@ async def refresh_token(response: Response, request: Request, data: RefreshReque
         code = status.HTTP_500_INTERNAL_SERVER_ERROR
         msg = e.message
 
-    await end_route(tx_token, route_token)
+    end_route(tx_token, route_token)
     if msg != "OK" or code != status.HTTP_200_OK:
         response.status_code = code
         return NoDataResponse(
@@ -270,7 +271,8 @@ async def refresh_token(response: Response, request: Request, data: RefreshReque
     response_model=LogoutResponse | NoDataResponse,
     summary="Logout user",
     description="Invalidate access token and log out the user.",
-    tags=["auth"],
+    name="logout",
+    tags=["post"],
     response_description="Logout confirmation message"
 )
 async def logout(response: Response, request: Request, current_user: User = Depends(get_current_user)):
@@ -315,7 +317,7 @@ async def logout(response: Response, request: Request, current_user: User = Depe
         code = status.HTTP_500_INTERNAL_SERVER_ERROR
         msg = e.message
 
-    await end_route(tx_token, route_token)
+    end_route(tx_token, route_token)
     if msg != "OK" or code != status.HTTP_200_OK:
         response.status_code = code
         return NoDataResponse(

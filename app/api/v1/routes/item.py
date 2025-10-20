@@ -5,7 +5,8 @@ from app.core.database import get_db
 from app import schemas
 from app.services import item_service
 
-router = APIRouter(prefix="/items", tags=["item"])
+ACT = "item"
+router = APIRouter(prefix="/item", tags=[ACT])
 
 @router.post("/", response_model=schemas.item.ItemResponse)
 def create_item(item: schemas.item.ItemCreate, db: Session = Depends(get_db)):

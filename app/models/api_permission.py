@@ -31,9 +31,9 @@ class ApiPermission(Base):
     # Audit field - timestamp when account was last updated (auto-set on update)
     updated_at = Column(DateTime, default=datetime.now)
 
-    api = relationship('Api', back_populates='profile') # many to one
+    api = relationship('Api', back_populates='profile_api_perms', overlaps="profile") # many to one
 
-    profile = relationship('Profile', back_populates='api_perms') # many to many
+    profile = relationship('Profile', back_populates='profile_api_perms', overlaps="api_perms,profile") # many to one
     
     __table_args__ = (
         UniqueConstraint('api_id', 'profile_id', name='api_permission_uniq_1'),

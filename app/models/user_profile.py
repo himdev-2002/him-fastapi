@@ -31,9 +31,9 @@ class UserProfile(Base):
     # Audit field - timestamp when account was last updated (auto-set on update)
     updated_at = Column(DateTime, default=datetime.now)
 
-    user = relationship('User', back_populates='profiles') # many to many
+    user = relationship('User', back_populates='user_profiles', overlaps="profiles,user") # many to one
 
-    profile = relationship('Profile', back_populates='users') # many to many
+    profile = relationship('Profile', back_populates='user_profiles', overlaps="profiles,user") # many to one
     
     __table_args__ = (
         UniqueConstraint('user_id', 'profile_id', name='user_profile_uniq_1'),
