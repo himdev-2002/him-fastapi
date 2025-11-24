@@ -78,7 +78,7 @@ async def get_users(response: Response, _: User = Depends(get_current_user)
 	except Exception as e:
 		rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
 		code = code+rid
-		msg = e.message
+		msg = str(e)
 		log_api(f"Failed to get list of users [{code}]: {e}", level="ERROR")
 	
 	response.status_code = rescode
@@ -146,7 +146,7 @@ async def get_user(response: Response, user_id: int
 	except Exception as e:
 		rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
 		code = code+rid
-		msg = e.message
+		msg = str(e)
 		log_api(f"Failed to get user [{code}]: {e}", level="ERROR")
 
 	response.status_code = rescode
@@ -209,7 +209,7 @@ async def create_user(response: Response,
 	except Exception as e:
 		rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
 		code = code+rid
-		msg = e.message
+		msg = str(e)
 		log_api(f"Failed to create user [{code}]: {e}", level="ERROR")
 
 	response.status_code = rescode
@@ -290,7 +290,7 @@ async def update_user(response: Response,
 	except Exception as e:
 		rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
 		code = code+rid
-		msg = e.message
+		msg = str(e)
 		log_api(f"Failed to update user [{code}]: {e}", level="ERROR")
 
 	response.status_code = rescode
@@ -364,7 +364,7 @@ async def delete_user(response: Response,
 	except Exception as e:
 		rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
 		code = code+rid	
-		msg = e.message
+		msg = str(e)
 		log_api(f"Failed to delete user [{code}]: {e}", level="ERROR")
 
 	response.status_code = rescode

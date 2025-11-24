@@ -48,12 +48,12 @@ async def gen_bcrypt(response: Response, request: Request, payload: HashRequest)
 	except ValidationError as e:
 		code = code+rid+1
 		rescode = status.HTTP_400_BAD_REQUEST
-		msg = e.message
+		msg = str(e)
 		log_api(f"Validation error [{code}]: {e}",  user="public", level="ERROR")
 	except Exception as e:
 		code = code+rid
 		rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
-		msg = e.message
+		msg = str(e)
 		log_api(f"Failed to generate bcrypt hash [{code}]: {e}", user="public", level="ERROR")
 
 	response.status_code = rescode
@@ -94,12 +94,12 @@ async def verify_bcrypt(response: Response, request: Request, payload: VerifyReq
 	except ValidationError as e:
 		code = code+rid+1
 		rescode = status.HTTP_400_BAD_REQUEST
-		msg = e.message
+		msg = str(e)
 		log_api(f"Validation error [{code}]: {e}", act=ACT, level="ERROR")
 	except Exception as e:
 		code = code+rid
 		rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
-		msg = e.message
+		msg = str(e)
 		log_api(f"Failed to verify bcrypt hash [{code}]: {e}", act=ACT, level="ERROR")
 
 	response.status_code = rescode

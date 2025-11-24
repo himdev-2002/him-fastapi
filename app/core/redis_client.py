@@ -26,8 +26,8 @@ def test_redis_connection(timeout: int = 5) -> str:
         print(f"Ping response: {resp}")
         return None
     except redis.ConnectionError as e:
-        return e.message
+        return str(e)
     except redis.AuthenticationError as e:
-        return e.message
+        return str(e)
     except Exception as e:
-        return e.message
+        return str(e)

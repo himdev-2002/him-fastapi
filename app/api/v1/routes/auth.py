@@ -127,7 +127,7 @@ async def login(response: Response, request: Request, data: OAuth2PasswordReques
     except Exception as e:
         code = code+rid
         rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
-        msg = e.message
+        msg = str(e)
         log_api(
             f"Failed to authenticate user [{code}]: {e}", 
             user=data.username, 
@@ -238,7 +238,7 @@ async def refresh_token(response: Response, request: Request, data: RefreshReque
             tx_id=tx_id
         )
         code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        msg = e.message
+        msg = str(e)
 
     end_route(tx_token, route_token)
     if msg != "OK" or code != status.HTTP_200_OK:
@@ -315,7 +315,7 @@ async def logout(response: Response, request: Request, current_user: User = Depe
             tx_id=tx_id
         )
         code = status.HTTP_500_INTERNAL_SERVER_ERROR
-        msg = e.message
+        msg = str(e)
 
     end_route(tx_token, route_token)
     if msg != "OK" or code != status.HTTP_200_OK:

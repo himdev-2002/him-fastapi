@@ -1,6 +1,7 @@
 
 # Tambahkan helper function jika diperlukan
-from sqlalchemy import inspect
+import inspect
+from sqlalchemy.inspection import inspect as sa_inspect
 from fastapi.routing import APIRoute
 from pydantic import BaseModel
 import shortuuid
@@ -12,7 +13,7 @@ from app.core.context import generate_tx_id, reset_route, reset_tx_id, set_route
 from typing import Any, Iterable
 
 def is_awaitable(obj):
-    return inspect.isawaitable(obj) or hasattr(obj, "__await__")
+    return inspect.isawaitable(obj) or hasattr(obj, "__await__") or inspect.iscoroutinefunction(obj)
 
 def hash_password(password: str) -> str:
     try:
@@ -226,6 +227,6 @@ def model_to_dict(obj: Any, exclude: Iterable[str] | None = None) -> dict[str, A
     excluded_columns = set(exclude) if exclude else set()
     return {
         c.key: getattr(obj, c.key)
-        for c in inspect(obj).mapper.column_attrs
+        for c in sa_inspect(obj).mapper.column_attrs
         if c.key not in excluded_columns
     }

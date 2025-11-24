@@ -1,6 +1,6 @@
 
 from fastapi import APIRouter
-from app.api.v1.routes import user, auth, public, profile
+from app.api.v1.routes import user, auth, public, profile, file
 from app.utils.logger import log_api
 
 log_api(
@@ -51,6 +51,13 @@ api_router.include_router(profile.router, prefix=f"{prefix}", tags=[api_version]
 #     level="INFO"
 # )
 # api_router.include_router(item.router, prefix=f"{prefix}", tags=["item"])
+
+log_api(
+    msg="Configure v1 File Routes...",
+    act="app",
+    level="INFO"
+)
+api_router.include_router(file.router, prefix=f"{prefix}", tags=[api_version])
 
 log_api(
     msg="Configure v1 Routes Done.",

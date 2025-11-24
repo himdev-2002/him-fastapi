@@ -36,7 +36,7 @@ class ProfileService:
             return profile, None
         except Exception as e:
             log_api(f"Error creating profile: {e}", act="profile", level="ERROR")
-            return None, e.message
+            return None, str(e)
 
     def bulk_create_profiles(self, profiles: list[Profile]) -> tuple[list[Profile] | None, str | None]:
         try:
@@ -46,7 +46,7 @@ class ProfileService:
             return profiles, None
         except Exception as e:
             log_api(f"Error bulk creating profiles: {e}", act="profile", level="ERROR")
-            return None, e.message
+            return None, str(e)
 
     def get_profile(self, profile_id: int) -> tuple[Profile | None, str | None]:
         try:
@@ -54,7 +54,7 @@ class ProfileService:
             return profile, None
         except Exception as e:
             log_api(f"Error getting profile: {e}", act="profile", level="ERROR")
-            return None, e.message
+            return None, str(e)
 
     def get_profiles(self) -> tuple[list[Profile] | None, str | None]:
         try:
@@ -62,7 +62,7 @@ class ProfileService:
             return profiles, None
         except Exception as e:
             log_api(f"Error getting profiles: {e}", act="profile", level="ERROR")
-            return None, e.message
+            return None, str(e)
 
     # def get_profiles1(self):
     #     try:

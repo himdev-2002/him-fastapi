@@ -15,22 +15,23 @@ All notable changes to this project will be documented in this file. See [conven
 - **(command)** add command to run project in dev and prod mode - ([61c8e3d](https://repo-url/commit/61c8e3d0d1c37eae52671120f03850c2770180f4)) - himdev-2002
 - **(jwt)** add jwt auth - ([57fd059](https://repo-url/commit/57fd059788c5f2d698a110204322c94f39ed24b7)) - himdev-2002
 - **(logger)** add function to logging - ([bfbffa7](https://repo-url/commit/bfbffa77754b450746cac729c0acc2ebeef67bf6)) - himdev-2002
+- **(upload)** add endpoint to upload file to rustfs server - ([73d26a9](https://repo-url/commit/73d26a9affa83af5587777124c4f88fe3fbe9c90)) - himdev-2002
 
 ### Refactoring
 
 - **(auth)** enhance code structure and logging - ([b5d5989](https://repo-url/commit/b5d5989769d018ee6a9ff7583d2f0135db816c86)) - himdev-2002
 - **(auth)** enhance code structure and logic authentication - ([eaa68e5](https://repo-url/commit/eaa68e56fb74f92198bb725dc0cdbb3a18e06fa0)) - himdev-2002
 - **(log)** enhance logging system - ([f36046b](https://repo-url/commit/f36046b371101076eda9cd1c84674081e745edb3)) - himdev-2002
-- **(user)** refactor user endpoint - ([eb79eec](https://repo-url/commit/eb79eeca88d6b81c6d2c8dfed14fcda3cce58661)) - himdev-2002
+- **(user)** refactor user endpoint - ([b029754](https://repo-url/commit/b029754ff7a55006ad93801ca7cedf218559bd54)) - himdev-2002
 
 
 ### Commit Statistics
 
-- 9 commit(s) contributed to the release.
-- 47 day(s) passed between the first and last commit.
-- 9 commit(s) parsed as conventional.
+- 10 commit(s) contributed to the release.
+- 82 day(s) passed between the first and last commit.
+- 10 commit(s) parsed as conventional.
 - 0 linked issue(s) detected in commits.
-- 47 day(s) passed between releases.
+- 82 day(s) passed between releases.
 
 ---
 ## [1.0.0b] - 2025-09-03

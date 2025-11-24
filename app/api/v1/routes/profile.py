@@ -41,7 +41,7 @@ async def get_profile(response: Response, request: Request, current_user: User =
     except Exception as e:
         code = code+rid
         rescode = status.HTTP_500_INTERNAL_SERVER_ERROR
-        msg = e.message
+        msg = str(e)
         log_api(f"Failed to get list of profiles [{code}]: {e}", level="ERROR")
 
     response.status_code = rescode

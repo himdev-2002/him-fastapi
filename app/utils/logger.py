@@ -50,6 +50,8 @@ file_formatter = loging.Formatter(
 )
 
 def create_act_handler(filename, act, when="H", interval=1, backup_count=7):
+    if settings.LOG_DIR and settings.LOG_DIR != ".":
+        filename = os.path.join(settings.LOG_DIR, filename)
     handler = TimedRotatingFileHandler(
         filename,
         # maxBytes=max_bytes,
@@ -77,6 +79,9 @@ act_config = {
     "logs/warning.log": "warning",
     "logs/error.log": "error",
     "logs/critical.log": "critical",
+    "logs/rustfs.log": "rustfs",
+    "logs/file.log": "file",
+    "logs/celery/file.log": "celery-file",
 }
 
 # Handler Console (berwarna)
@@ -110,7 +115,7 @@ def log_api(
     user: str = None,
     route: str = None,
     level: str = "INFO",
-    act: str = "DEBUG",
+    act: str = "debug",
     tx_id: str = None,
     req_id: str = None
 ):
